@@ -77,7 +77,6 @@ fn run() -> Result<(), Box<dyn Error>> {
         println!("cargo:rustc-link-lib={}", name);
     }
 
-
     println!("cargo:rustc-link-search={}", &env::var("OUT_DIR")?);
 
     cc::Build::new()
