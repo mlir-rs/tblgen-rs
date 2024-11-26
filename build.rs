@@ -77,8 +77,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         println!("cargo:rustc-link-lib={}", name);
     }
 
-    std::env::set_var("CXXFLAGS", llvm_config("--cxxflags")?);
-    std::env::set_var("CFLAGS", llvm_config("--cflags")?);
+
     println!("cargo:rustc-link-search={}", &env::var("OUT_DIR")?);
 
     cc::Build::new()
@@ -92,7 +91,6 @@ fn run() -> Result<(), Box<dyn Error>> {
         .cpp(true)
         .include("cc/include")
         .include(llvm_config("--includedir")?)
-        .flag(&llvm_config("--cxxflags")?)
         .flag("-Wno-unused-parameter")
         .std("c++17")
         .compile("CTableGen");
