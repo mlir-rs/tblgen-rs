@@ -19,9 +19,9 @@ llvm18-0 = []
 llvm19-0 = []
 
 [dependencies]
-thiserror = "1.0.61"
+thiserror = "2.0.3"
 paste = "1.0.15"
 
 [build-dependencies]
-bindgen = "0.69.4"
-cc = "1.0.98"
+bindgen = "0.70.1"
+cc = "1.2.1"

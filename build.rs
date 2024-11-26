@@ -79,6 +79,7 @@ fn run() -> Result<(), Box<dyn Error>> {
                 .map(|r| r.unwrap().path())
                 .filter(|r| r.is_file() && r.extension().unwrap() == "cpp"),
         )
+        .cpp_link_stdlib(get_system_libcpp())
         .cpp(true)
         .include("cc/include")
         .include(llvm_config("--includedir")?)

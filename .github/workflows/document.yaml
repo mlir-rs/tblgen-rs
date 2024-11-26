@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - master
-  pull_request:
 permissions:
   contents: read
   pages: write
@@ -13,14 +12,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
       - uses: swatinem/rust-cache@v2
+      - uses: actions/configure-pages@v5
       - uses: homebrew/actions/setup-homebrew@master
       - run: tools/setup.sh
-      - run: cargo doc
-      - run: rm target/doc/.lock
+      - run: sudo apt-get install -y build-essential
+      - run: cargo clean --doc
+      - run: cargo doc --document-private-items
+      - name: Generate index.html file
+        run: |
+            echo "<meta http-equiv=refresh content=0;url=tblgen-alt/index.html>" > target/doc/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: target/doc
-      - uses: actions/deploy-pages@v4
-        if: github.ref == 'refs/heads/main'
+          path: ./target/doc
+  deploy:
+      needs: build
+      runs-on: ubuntu-latest
+      steps:
+      - name: Deploy documentation
+        id: pages
+        uses: actions/deploy-pages@v4
