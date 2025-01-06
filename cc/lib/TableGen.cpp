@@ -62,7 +62,7 @@ TableGenParserRef tableGenGet() {
 void tableGenFree(TableGenParserRef tg_ref) { delete unwrap(tg_ref); }
 
 void tableGenAddSourceFile(TableGenParserRef tg_ref, TableGenStringRef source) {
-  return unwrap(tg_ref)->addSourceFile(StringRef(source.data, source.len));
+  unwrap(tg_ref)->addSourceFile(StringRef(source.data, source.len));
 }
 
 TableGenBool tableGenAddSource(TableGenParserRef tg_ref, const char *source) {
