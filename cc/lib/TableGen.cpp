@@ -69,7 +69,7 @@ TableGenBool tableGenAddSource(TableGenParserRef tg_ref, const char *source) {
   return unwrap(tg_ref)->addSource(source);
 }
 
-void tableGenAddIncludePath(TableGenParserRef tg_ref,
+void tableGenAddIncludeDirectory(TableGenParserRef tg_ref,
                             TableGenStringRef include) {
   return unwrap(tg_ref)->addIncludeDirectory(
       StringRef(include.data, include.len));

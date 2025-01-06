@@ -55,7 +55,7 @@ TableGenParserRef tableGenGet();
 void tableGenFree(TableGenParserRef tg_ref);
 TableGenBool tableGenAddSource(TableGenParserRef tg_ref, const char *source);
 void tableGenAddSourceFile(TableGenParserRef tg_ref, TableGenStringRef source);
-void tableGenAddIncludePath(TableGenParserRef tg_ref,
+void tableGenAddIncludeDirectory(TableGenParserRef tg_ref,
                             TableGenStringRef include);
 
 /// NOTE: TableGen currently relies on global state within a given parser

@@ -62,7 +62,7 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let keeper: RecordKeeper = TableGenParser::new()
 //!     .add_source(r#"include "mlir/IR/OpBase.td""#)?
-//!     .add_include_path(&format!("{}/include", std::env::var("TABLEGEN_190_PREFIX")?))
+//!     .add_include_directory(&format!("{}/include", std::env::var("TABLEGEN_190_PREFIX")?))
 //!     .parse()?;
 //! let i32_def = keeper.def("I32").expect("has I32 def");
 //! assert!(i32_def.subclass_of("I"));
@@ -80,7 +80,7 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let keeper: RecordKeeper = TableGenParser::new()
 //!     .add_source_file("mlir/IR/OpBase.td")
-//!     .add_include_path(&format!("{}/include", std::env::var("TABLEGEN_190_PREFIX")?))
+//!     .add_include_directory(&format!("{}/include", std::env::var("TABLEGEN_190_PREFIX")?))
 //!     .parse()?;
 //! let i32_def = keeper.def("I32").expect("has I32 def");
 //! assert!(i32_def.subclass_of("I"));
@@ -126,7 +126,7 @@ pub use record::RecordValue;
 pub use record_keeper::RecordKeeper;
 
 use raw::{
-    tableGenAddIncludePath, tableGenAddSource, tableGenAddSourceFile, tableGenFree, tableGenGet,
+    tableGenAddIncludeDirectory, tableGenAddSource, tableGenAddSourceFile, tableGenFree, tableGenGet,
     tableGenParse, TableGenParserRef,
 };
 use string_ref::StringRef;
@@ -162,8 +162,8 @@ impl<'s> TableGenParser<'s> {
     }
 
     /// Adds the given path to the list of included directories.
-    pub fn add_include_path(self, include: &str) -> Self {
-        unsafe { tableGenAddIncludePath(self.raw, StringRef::from(include).to_raw()) }
+    pub fn add_include_directory(self, include: &str) -> Self {
+        unsafe { tableGenAddIncludeDirectory(self.raw, StringRef::from(include).to_raw()) }
         self
     }
 
