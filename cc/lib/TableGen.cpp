@@ -12,6 +12,7 @@
 #include "TableGen.h"
 #include "Types.h"
 #include <cstring>
+#include <string>
 
 using ctablegen::RecordMap;
 using ctablegen::tableGenFromRecType;
@@ -43,16 +44,9 @@ bool ctablegen::TableGenParser::addSource(const char *source) {
   return true;
 }
 
-bool ctablegen::TableGenParser::addSourceFile(const StringRef source) {
-  ErrorOr<std::unique_ptr<MemoryBuffer>> FileOrErr =
-      MemoryBuffer::getFile(source);
-
-  if (std::error_code EC = FileOrErr.getError()) {
-    return false;
-  }
-
-  sourceMgr.AddNewSourceBuffer(std::move(*FileOrErr), SMLoc());
-  return true;
+bool ctablegen::TableGenParser::addSourceFile(const StringRef path) {
+  std::string full_path = "";
+  return !sourceMgr.AddIncludeFile(std::string(path), SMLoc(), full_path);
 }
 
 TableGenParserRef tableGenGet() {
