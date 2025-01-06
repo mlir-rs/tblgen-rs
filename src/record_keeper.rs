@@ -96,7 +96,7 @@ impl<'s> RecordKeeper<'s> {
     }
 }
 
-impl<'s> Drop for RecordKeeper<'s> {
+impl Drop for RecordKeeper<'_> {
     fn drop(&mut self) {
         unsafe {
             tableGenRecordKeeperFree(self.raw);
@@ -131,7 +131,7 @@ pub struct NamedRecordIter<'a, T> {
     _kind: PhantomData<&'a T>,
 }
 
-impl<'a, T> NamedRecordIter<'a, T> {
+impl<T> NamedRecordIter<'_, T> {
     unsafe fn from_raw(raw: TableGenRecordKeeperIteratorRef) -> Self {
         NamedRecordIter {
             raw,
@@ -159,13 +159,13 @@ impl<'a, T: NextRecord> Iterator for NamedRecordIter<'a, T> {
     }
 }
 
-impl<'a, T> Clone for NamedRecordIter<'a, T> {
+impl<T> Clone for NamedRecordIter<'_, T> {
     fn clone(&self) -> Self {
         unsafe { Self::from_raw(tableGenRecordKeeperIteratorClone(self.raw)) }
     }
 }
 
-impl<'a, T> Drop for NamedRecordIter<'a, T> {
+impl<T> Drop for NamedRecordIter<'_, T> {
     fn drop(&mut self) {
         unsafe { tableGenRecordKeeperIteratorFree(self.raw) }
     }
@@ -201,7 +201,7 @@ impl<'a> Iterator for RecordIter<'a> {
     }
 }
 
-impl<'a> Drop for RecordIter<'a> {
+impl Drop for RecordIter<'_> {
     fn drop(&mut self) {
         unsafe { tableGenRecordVectorFree(self.raw) }
     }

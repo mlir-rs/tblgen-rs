@@ -37,7 +37,7 @@ pub struct Record<'a> {
     _reference: PhantomData<&'a TableGenRecordRef>,
 }
 
-impl<'a> Display for Record<'a> {
+impl Display for Record<'_> {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         let mut data = (formatter, Ok(()));
 
@@ -53,7 +53,7 @@ impl<'a> Display for Record<'a> {
     }
 }
 
-impl<'a> Debug for Record<'a> {
+impl Debug for Record<'_> {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         writeln!(formatter, "Record(")?;
         Display::fmt(self, formatter)?;
@@ -191,7 +191,7 @@ impl<'a> Record<'a> {
     }
 }
 
-impl<'a> SourceLoc for Record<'a> {
+impl SourceLoc for Record<'_> {
     fn source_location(self) -> SourceLocation {
         unsafe { SourceLocation::from_raw(tableGenRecordGetLoc(self.raw)) }
     }
@@ -236,7 +236,7 @@ pub struct RecordValue<'a> {
     _reference: PhantomData<&'a TableGenRecordRef>,
 }
 
-impl<'a> Display for RecordValue<'a> {
+impl Display for RecordValue<'_> {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         let mut data = (formatter, Ok(()));
 
@@ -252,7 +252,7 @@ impl<'a> Display for RecordValue<'a> {
     }
 }
 
-impl<'a> RecordValue<'a> {
+impl RecordValue<'_> {
     /// Creates a record from a raw object.
     ///
     /// # Safety
@@ -270,7 +270,7 @@ impl<'a> RecordValue<'a> {
     }
 }
 
-impl<'a> SourceLoc for RecordValue<'a> {
+impl SourceLoc for RecordValue<'_> {
     fn source_location(self) -> SourceLocation {
         unsafe { SourceLocation::from_raw(tableGenRecordValGetLoc(self.raw)) }
     }

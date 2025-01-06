@@ -51,7 +51,7 @@ pub enum TypedInit<'a> {
     Invalid,
 }
 
-impl<'a> TypedInit<'a> {
+impl TypedInit<'_> {
     fn variant_name(&self) -> &'static str {
         match self {
             TypedInit::Bit(_) => "Bit",
@@ -67,7 +67,7 @@ impl<'a> TypedInit<'a> {
     }
 }
 
-impl<'a> Display for TypedInit<'a> {
+impl Display for TypedInit<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Bit(init) => write!(f, "{}", &init),
@@ -83,7 +83,7 @@ impl<'a> Display for TypedInit<'a> {
     }
 }
 
-impl<'a> Debug for TypedInit<'a> {
+impl Debug for TypedInit<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "TypedInit(")?;
         let name = self.variant_name();
