@@ -12,7 +12,6 @@
 #include "TableGen.h"
 #include "Types.h"
 #include <cstring>
-#include <iostream>
 
 using ctablegen::RecordMap;
 using ctablegen::tableGenFromRecType;
