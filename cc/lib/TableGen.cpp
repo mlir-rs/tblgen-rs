@@ -12,6 +12,7 @@
 #include "TableGen.h"
 #include "Types.h"
 #include <cstring>
+#include <iostream>
 
 using ctablegen::RecordMap;
 using ctablegen::tableGenFromRecType;
@@ -48,6 +49,7 @@ bool ctablegen::TableGenParser::addSourceFile(const StringRef source) {
       MemoryBuffer::getFile(source);
 
   if (std::error_code EC = FileOrErr.getError()) {
+    std::cerr << "tablegen error: " << EC << "\n";
     return false;
   }
 
