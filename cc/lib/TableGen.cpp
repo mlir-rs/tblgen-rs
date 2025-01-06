@@ -22,7 +22,7 @@ RecordKeeper *ctablegen::TableGenParser::parse() {
 
   for (const auto &file : files) {
     std::string full_path;
-    if (!sourceMgr.AddIncludeFile(std::string(file), SMLoc(), full_path)) {
+    if (!sourceMgr.AddIncludeFile(file, SMLoc(), full_path)) {
       return nullptr;
     }
   }
