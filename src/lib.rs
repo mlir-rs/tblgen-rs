@@ -71,6 +71,24 @@
 //! # }
 //! ```
 //!
+//! You can also pass an included file's path directly.
+//!
+//! ```rust
+//! use tblgen_alt::{TableGenParser, RecordKeeper};
+//! use std::path::Path;
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let keeper: RecordKeeper = TableGenParser::new()
+//!     .add_source_file("mlir/IR/OpBase.td")?
+//!     .add_include_path(&format!("{}/include", std::env::var("TABLEGEN_190_PREFIX")?))
+//!     .parse()?;
+//! let i32_def = keeper.def("I32").expect("has I32 def");
+//! assert!(i32_def.subclass_of("I"));
+//! assert_eq!(i32_def.int_value("bitwidth"), Ok(32));
+//! # Ok(())
+//! # }
+//! ```
+//!
 //! # API Stability
 //!
 //! LLVM does not provide a stable C API for TableGen, and the C API provided by
