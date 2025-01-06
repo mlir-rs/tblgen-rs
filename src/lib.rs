@@ -71,7 +71,7 @@
 //! # }
 //! ```
 //!
-//! You can also pass an included file's path directly.
+//! You can also pass an included filename directly.
 //!
 //! ```rust
 //! use tblgen_alt::{TableGenParser, RecordKeeper};
@@ -126,8 +126,8 @@ pub use record::RecordValue;
 pub use record_keeper::RecordKeeper;
 
 use raw::{
-    tableGenAddIncludeDirectory, tableGenAddSource, tableGenAddSourceFile, tableGenFree, tableGenGet,
-    tableGenParse, TableGenParserRef,
+    tableGenAddIncludeDirectory, tableGenAddSource, tableGenAddSourceFile, tableGenFree,
+    tableGenGet, tableGenParse, TableGenParserRef,
 };
 use string_ref::StringRef;
 
