@@ -79,7 +79,7 @@
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let keeper: RecordKeeper = TableGenParser::new()
-//!     .add_source_file("mlir/IR/OpBase.td")?
+//!     .add_source_file("mlir/IR/OpBase.td")
 //!     .add_include_path(&format!("{}/include", std::env::var("TABLEGEN_190_PREFIX")?))
 //!     .parse()?;
 //! let i32_def = keeper.def("I32").expect("has I32 def");
@@ -168,12 +168,9 @@ impl<'s> TableGenParser<'s> {
     }
 
     /// Reads TableGen source code from the file at the given path.
-    pub fn add_source_file(self, source: &str) -> Result<Self, Error> {
-        if unsafe { tableGenAddSourceFile(self.raw, StringRef::from(source).to_raw()) > 0 } {
-            Ok(self)
-        } else {
-            Err(TableGenError::InvalidSource.into())
-        }
+    pub fn add_source_file(self, source: &str) -> Self {
+        unsafe { tableGenAddSourceFile(self.raw, StringRef::from(source).to_raw()) }
+        self
     }
 
     /// Adds the given TableGen source string.
