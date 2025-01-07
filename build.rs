@@ -37,6 +37,8 @@ fn run() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=cc");
     println!("cargo:rustc-link-search={}", llvm_config("--libdir")?);
 
+    build_c_library()?;
+
     for name in llvm_config("--libnames")?.trim().split(' ') {
         println!("cargo:rustc-link-lib=static={}", parse_library_name(name)?);
     }
@@ -67,6 +69,20 @@ fn run() -> Result<(), Box<dyn Error>> {
         println!("cargo:rustc-link-lib={name}");
     }
 
+    bindgen::builder()
+        .header("wrapper.h")
+        .clang_arg("-Icc/include")
+        .clang_arg(format!("-I{}", llvm_config("--includedir")?))
+        .default_enum_style(bindgen::EnumVariation::ModuleConsts)
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+        .generate()
+        .unwrap()
+        .write_to_file(Path::new(&env::var("OUT_DIR")?).join("bindings.rs"))?;
+
+    Ok(())
+}
+
+fn build_c_library() -> Result<(), Box<dyn Error>> {
     std::env::set_var("CXXFLAGS", llvm_config("--cxxflags")?);
     std::env::set_var("CFLAGS", llvm_config("--cflags")?);
     println!("cargo:rustc-link-search={}", &env::var("OUT_DIR")?);
@@ -74,9 +90,9 @@ fn run() -> Result<(), Box<dyn Error>> {
     cc::Build::new()
         .files(
             std::fs::read_dir("cc/lib")?
-                .filter(|r| r.is_ok())
-                .map(|r| r.unwrap().path())
-                .filter(|r| r.is_file() && r.extension().unwrap() == "cpp"),
+                .filter_map(|result| result.ok())
+                .map(|entry| entry.path())
+                .filter(|path| path.is_file() && path.extension().unwrap() == "cpp"),
         )
         .cpp(true)
         .include("cc/include")
@@ -87,16 +103,6 @@ fn run() -> Result<(), Box<dyn Error>> {
         .compile("CTableGen");
 
     println!("cargo:rustc-link-lib=static=CTableGen");
-
-    bindgen::builder()
-        .header("wrapper.h")
-        .clang_arg("-Icc/include")
-        .clang_arg(format!("-I{}", llvm_config("--includedir")?))
-        .default_enum_style(bindgen::EnumVariation::ModuleConsts)
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-        .generate()
-        .unwrap()
-        .write_to_file(Path::new(&env::var("OUT_DIR")?).join("bindings.rs"))?;
 
     Ok(())
 }
