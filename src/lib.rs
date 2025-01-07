@@ -127,7 +127,7 @@ pub struct TableGenParser<'s> {
     _source_ref: PhantomData<&'s str>,
 }
 
-impl<'s> Default for TableGenParser<'s> {
+impl Default for TableGenParser<'_> {
     fn default() -> Self {
         Self::new()
     }
@@ -212,7 +212,7 @@ impl<'s> TableGenParser<'s> {
     }
 }
 
-impl<'s> Drop for TableGenParser<'s> {
+impl Drop for TableGenParser<'_> {
     fn drop(&mut self) {
         unsafe {
             tableGenFree(self.raw);
