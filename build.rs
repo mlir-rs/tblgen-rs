@@ -75,8 +75,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         .clang_arg(format!("-I{}", llvm_config("--includedir")?))
         .default_enum_style(bindgen::EnumVariation::ModuleConsts)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-        .generate()
-        .unwrap()
+        .generate()?
         .write_to_file(Path::new(&env::var("OUT_DIR")?).join("bindings.rs"))?;
 
     Ok(())
