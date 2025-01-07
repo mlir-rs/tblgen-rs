@@ -62,7 +62,25 @@
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let keeper: RecordKeeper = TableGenParser::new()
 //!     .add_source(r#"include "mlir/IR/OpBase.td""#)?
-//!     .add_include_path(&format!("{}/include", std::env::var("TABLEGEN_190_PREFIX")?))
+//!     .add_include_directory(&format!("{}/include", std::env::var("TABLEGEN_190_PREFIX")?))
+//!     .parse()?;
+//! let i32_def = keeper.def("I32").expect("has I32 def");
+//! assert!(i32_def.subclass_of("I"));
+//! assert_eq!(i32_def.int_value("bitwidth"), Ok(32));
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! You can also pass an included filename directly.
+//!
+//! ```rust
+//! use tblgen_alt::{TableGenParser, RecordKeeper};
+//! use std::path::Path;
+//!
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let keeper: RecordKeeper = TableGenParser::new()
+//!     .add_source_file("mlir/IR/OpBase.td")
+//!     .add_include_directory(&format!("{}/include", std::env::var("TABLEGEN_190_PREFIX")?))
 //!     .parse()?;
 //! let i32_def = keeper.def("I32").expect("has I32 def");
 //! assert!(i32_def.subclass_of("I"));
@@ -108,8 +126,8 @@ pub use record::RecordValue;
 pub use record_keeper::RecordKeeper;
 
 use raw::{
-    tableGenAddIncludePath, tableGenAddSource, tableGenAddSourceFile, tableGenFree, tableGenGet,
-    tableGenParse, TableGenParserRef,
+    tableGenAddIncludeDirectory, tableGenAddSource, tableGenAddSourceFile, tableGenFree,
+    tableGenGet, tableGenParse, TableGenParserRef,
 };
 use string_ref::StringRef;
 
@@ -144,18 +162,15 @@ impl<'s> TableGenParser<'s> {
     }
 
     /// Adds the given path to the list of included directories.
-    pub fn add_include_path(self, include: &str) -> Self {
-        unsafe { tableGenAddIncludePath(self.raw, StringRef::from(include).to_raw()) }
+    pub fn add_include_directory(self, include: &str) -> Self {
+        unsafe { tableGenAddIncludeDirectory(self.raw, StringRef::from(include).to_raw()) }
         self
     }
 
     /// Reads TableGen source code from the file at the given path.
-    pub fn add_source_file(self, source: &str) -> Result<Self, Error> {
-        if unsafe { tableGenAddSourceFile(self.raw, StringRef::from(source).to_raw()) > 0 } {
-            Ok(self)
-        } else {
-            Err(TableGenError::InvalidSource.into())
-        }
+    pub fn add_source_file(self, source: &str) -> Self {
+        unsafe { tableGenAddSourceFile(self.raw, StringRef::from(source).to_raw()) }
+        self
     }
 
     /// Adds the given TableGen source string.

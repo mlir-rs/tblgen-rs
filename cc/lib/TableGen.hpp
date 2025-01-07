@@ -38,13 +38,15 @@ class TableGenParser {
 public:
   TableGenParser() {}
   bool addSource(const char *source);
-  bool addSourceFile(const StringRef source);
-  void addIncludePath(const StringRef include);
+  void addSourceFile(const StringRef source);
+  void addIncludeDirectory(const StringRef include);
   RecordKeeper *parse();
 
   SourceMgr sourceMgr;
+
 private:
   std::vector<std::string> includeDirs;
+  std::vector<std::string> files;
 };
 
 // Utility
@@ -60,7 +62,7 @@ public:
         opaqueData(opaqueData), pos(0u) {}
 
   void write_impl(const char *ptr, size_t size) override {
-    TableGenStringRef string = TableGenStringRef { .data = ptr, .len = size };
+    TableGenStringRef string = TableGenStringRef{.data = ptr, .len = size};
     callback(string, opaqueData);
     pos += size;
   }
@@ -75,7 +77,8 @@ private:
 
 } // namespace ctablegen
 
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::TableGenParser, TableGenParserRef);
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::TableGenParser,
+                                   TableGenParserRef);
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(RecordKeeper, TableGenRecordKeeperRef);
 
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::RecordMap, TableGenRecordMapRef);
