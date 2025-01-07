@@ -18,7 +18,7 @@ const LLVM_MAJOR_VERSION: usize = if cfg!(feature = "llvm16-0") {
 
 fn main() {
     if let Err(error) = run() {
-        eprintln!("{}", error);
+        eprintln!("{error}");
         exit(1);
     }
 }
@@ -26,10 +26,9 @@ fn main() {
 fn run() -> Result<(), Box<dyn Error>> {
     let version = llvm_config("--version")?;
 
-    if !version.starts_with(&format!("{}.", LLVM_MAJOR_VERSION)) {
+    if !version.starts_with(&format!("{LLVM_MAJOR_VERSION}.")) {
         return Err(format!(
-            "failed to find correct version ({}.x.x) of llvm-config (found {})",
-            LLVM_MAJOR_VERSION, version
+            "failed to find correct version ({LLVM_MAJOR_VERSION}.x.x) of llvm-config (found {version})",
         )
         .into());
     }
@@ -65,7 +64,7 @@ fn run() -> Result<(), Box<dyn Error>> {
     println!("cargo:rustc-link-lib=ffi");
 
     if let Some(name) = get_system_libcpp() {
-        println!("cargo:rustc-link-lib={}", name);
+        println!("cargo:rustc-link-lib={name}");
     }
 
     std::env::set_var("CXXFLAGS", llvm_config("--cxxflags")?);
