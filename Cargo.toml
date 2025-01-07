@@ -8,7 +8,7 @@ description = "Safe Rust bindings for TableGen. Alternative updated version."
 repository = "https://github.com/edg-l/tblgen-rs-alt"
 keywords = ["llvm", "tablegen", "bindings", "wrapper"]
 categories = ["development-tools::ffi"]
-documentation = "https://danacus.gitlab.io/tblgen-rs/tblgen/"
+documentation = "https://mlir-rs.github.io/tblgen-rs-alt/tblgen_alt/"
 exclude = ["doc/"]
 
 [features]
