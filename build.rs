@@ -89,6 +89,7 @@ fn build_c_library() -> Result<(), Box<dyn Error>> {
     env::set_var("CFLAGS", llvm_config("--cflags")?);
 
     cc::Build::new()
+        .cpp(true)
         .files(
             read_dir("cc/lib")?
                 .collect::<Result<Vec<_>, _>>()?
@@ -96,7 +97,6 @@ fn build_c_library() -> Result<(), Box<dyn Error>> {
                 .map(|entry| entry.path())
                 .filter(|path| path.is_file() && path.extension() == Some(OsStr::new("cpp"))),
         )
-        .cpp(true)
         .include("cc/include")
         .include(llvm_config("--includedir")?)
         .flag("-Werror")
