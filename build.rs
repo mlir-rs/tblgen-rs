@@ -1,6 +1,7 @@
 use std::{
     env,
     error::Error,
+    ffi::OsStr,
     fs::read_dir,
     path::Path,
     process::{exit, Command},
@@ -90,19 +91,17 @@ fn build_c_library() -> Result<(), Box<dyn Error>> {
     cc::Build::new()
         .files(
             read_dir("cc/lib")?
-                .filter_map(|result| result.ok())
+                .collect::<Result<Vec<_>, _>>()?
+                .into_iter()
                 .map(|entry| entry.path())
-                .filter(|path| path.is_file() && path.extension().unwrap() == "cpp"),
+                .filter(|path| path.is_file() && path.extension() == Some(OsStr::new("cpp"))),
         )
         .cpp(true)
         .include("cc/include")
         .include(llvm_config("--includedir")?)
-        .flag(&llvm_config("--cxxflags")?)
-        .flag("-Wno-unused-parameter")
+        .flag("-Werror")
         .std("c++17")
         .compile("CTableGen");
-
-    println!("cargo:rustc-link-lib=static=CTableGen");
 
     Ok(())
 }
