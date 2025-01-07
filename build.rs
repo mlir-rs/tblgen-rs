@@ -123,9 +123,8 @@ fn llvm_config(argument: &str) -> Result<String, Box<dyn Error>> {
         .map(|path| Path::new(&path).join("bin"))
         .unwrap_or_default();
     let call = format!(
-        "{} --link-static {}",
-        prefix.join("llvm-config").display(),
-        argument
+        "{} --link-static {argument}",
+        prefix.join("llvm-config").display()
     );
 
     Ok(str::from_utf8(
