@@ -86,7 +86,6 @@ fn run() -> Result<(), Box<dyn Error>> {
 fn build_c_library() -> Result<(), Box<dyn Error>> {
     env::set_var("CXXFLAGS", llvm_config("--cxxflags")?);
     env::set_var("CFLAGS", llvm_config("--cflags")?);
-    println!("cargo:rustc-link-search={}", &env::var("OUT_DIR")?);
 
     cc::Build::new()
         .files(
