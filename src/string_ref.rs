@@ -8,7 +8,7 @@ pub struct StringRef<'a> {
     _reference: PhantomData<&'a TableGenStringRef>,
 }
 
-impl<'a> StringRef<'a> {
+impl StringRef<'_> {
     pub unsafe fn to_raw(self) -> TableGenStringRef {
         self.raw
     }
