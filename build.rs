@@ -1,6 +1,7 @@
 use std::{
     env,
     error::Error,
+    fs::read_dir,
     path::Path,
     process::{exit, Command},
     str,
@@ -83,13 +84,13 @@ fn run() -> Result<(), Box<dyn Error>> {
 }
 
 fn build_c_library() -> Result<(), Box<dyn Error>> {
-    std::env::set_var("CXXFLAGS", llvm_config("--cxxflags")?);
-    std::env::set_var("CFLAGS", llvm_config("--cflags")?);
+    env::set_var("CXXFLAGS", llvm_config("--cxxflags")?);
+    env::set_var("CFLAGS", llvm_config("--cflags")?);
     println!("cargo:rustc-link-search={}", &env::var("OUT_DIR")?);
 
     cc::Build::new()
         .files(
-            std::fs::read_dir("cc/lib")?
+            read_dir("cc/lib")?
                 .filter_map(|result| result.ok())
                 .map(|entry| entry.path())
                 .filter(|path| path.is_file() && path.extension().unwrap() == "cpp"),
@@ -142,5 +143,5 @@ fn llvm_config(argument: &str) -> Result<String, Box<dyn Error>> {
 fn parse_library_name(name: &str) -> Result<&str, String> {
     name.strip_prefix("lib")
         .and_then(|name| name.split('.').next())
-        .ok_or_else(|| format!("failed to parse library name: {}", name))
+        .ok_or_else(|| format!("failed to parse library name: {name}"))
 }
