@@ -14,7 +14,7 @@
 
 TableGenStringRef tableGenRecordValGetName(TableGenRecordValRef rv_ref) {
   auto s = unwrap(rv_ref)->getName();
-  return TableGenStringRef { .data = s.data(), .len = s.size() };
+  return TableGenStringRef{.data = s.data(), .len = s.size()};
 }
 
 TableGenTypedInitRef tableGenRecordValGetNameInit(TableGenRecordValRef rv_ref) {
@@ -58,8 +58,8 @@ tableGenRecordValGetValAsDefRecord(TableGenRecordValRef rv_ref) {
       wrap(dyn_cast<TypedInit>(unwrap(rv_ref)->getValue())));
 }
 
-void tableGenRecordValPrint(TableGenRecordValRef rv_ref, TableGenStringCallback callback,
-                        void *userData) {
+void tableGenRecordValPrint(TableGenRecordValRef rv_ref,
+                            TableGenStringCallback callback, void *userData) {
   ctablegen::CallbackOstream stream(callback, userData);
   stream << *unwrap(rv_ref);
 }
