@@ -14,7 +14,7 @@ The goal of this crate is to enable users to develop custom TableGen backends in
 
 ## Documentation
 
-Read the documentation at https://danacus.gitlab.io/tblgen-rs/tblgen/.
+Read the documentation at https://mlir-rs.github.io/tblgen-rs-alt/tblgen_alt/.
 
 ## Supported LLVM Versions
 
