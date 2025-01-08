@@ -151,11 +151,9 @@ void tableGenInitPrint(TableGenTypedInitRef ti, TableGenStringCallback callback,
 
 void tableGenInitDump(TableGenTypedInitRef ti) { unwrap(ti)->dump(); }
 
-TableGenBool tableGenPrintError(TableGenParserRef ref,
-                                TableGenSourceLocationRef loc_ref,
-                                TableGenDiagKind dk, TableGenStringRef message,
-                                TableGenStringCallback callback,
-                                void *userData) {
+TableGenBool tableGenPrintError(TableGenParserRef ref, TableGenSourceLocationRef loc_ref, TableGenDiagKind dk,
+                        TableGenStringRef message,
+                        TableGenStringCallback callback, void *userData) {
   ctablegen::CallbackOstream stream(callback, userData);
   ArrayRef<SMLoc> Loc = *unwrap(loc_ref);
 
@@ -184,8 +182,7 @@ TableGenSourceLocationRef tableGenSourceLocationNull() {
   return wrap(new ArrayRef(SMLoc()));
 }
 
-TableGenSourceLocationRef
-tableGenSourceLocationClone(TableGenSourceLocationRef loc_ref) {
+TableGenSourceLocationRef tableGenSourceLocationClone(TableGenSourceLocationRef loc_ref) {
   return wrap(new ArrayRef(*unwrap(loc_ref)));
 }
 
