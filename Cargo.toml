@@ -1,11 +1,11 @@
 [package]
 name = "tblgen"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 authors = ["Daan Vanoverloop"]
-description = "Safe Rust bindings for TableGen. Alternative updated version."
-repository = "https://github.com/edg-l/tblgen-rs-alt"
+description = "Safe Rust bindings for TableGen."
+repository = "https://github.com/mlir-rs/tblgen-rs"
 keywords = ["llvm", "tablegen", "bindings", "wrapper"]
 categories = ["development-tools::ffi"]
 documentation = "https://mlir-rs.github.io/tblgen-rs/tblgen/"
