@@ -6,6 +6,7 @@
 ![Crates.io License](https://img.shields.io/crates/l/tblgen)
 
 Original project: https://gitlab.com/Danacus/tblgen-rs.
+
 Original author: Daan Vanoverloop.
 
 Thanks to the Daan for giving us access to publish to the original `tblgen` crate, we can now switch from the old `tblgen-alt` to `tblgen`. Future updates will be pushed to the original crate.
