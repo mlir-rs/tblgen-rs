@@ -1,6 +1,6 @@
 # tblgen
 
-[![GitHub Action](https://img.shields.io/github/actions/workflow/status/edg-l/tblgen-rs/test.yaml?branch=master&style=flat-square)](https://github.com/edg-l/tblgen-rs/actions?query=workflow%3Atest)
+[![GitHub Action](https://img.shields.io/github/actions/workflow/status/mlir-rs/tblgen-rs/test.yaml?branch=master&style=flat-square)](https://github.com/mlir-rs/tblgen-rs/actions?query=workflow%3Atest)
 [![Crate](https://img.shields.io/crates/v/tblgen.svg?style=flat-square)](https://crates.io/crates/tblgen)
 ![Crates.io Total Downloads](https://img.shields.io/crates/d/tblgen)
 ![Crates.io License](https://img.shields.io/crates/l/tblgen)
