@@ -12,11 +12,10 @@
 #include "TableGen.hpp"
 #include "Types.h"
 #include "llvm/Support/SourceMgr.h"
-#include "llvm/TableGen/Error.h"
 
 namespace ctablegen {
 
-TableGenRecTyKind tableGenFromRecType(RecTy *rt) {
+TableGenRecTyKind tableGenFromRecType(const RecTy *rt) {
   switch (rt->getRecTyKind()) {
   case RecTy::BitRecTyKind:
     return TableGenBitRecTyKind;
@@ -69,7 +68,8 @@ int8_t *tableGenBitsInitGetValue(TableGenTypedInitRef ti, size_t *len) {
   auto bits = new int8_t[*len];
 
   for (size_t i = 0; i < *len; i++) {
-    bits[i] = reinterpret_cast<BitInit *>(bits_init->getBit(i))->getValue();
+    bits[i] =
+        reinterpret_cast<const BitInit *>(bits_init->getBit(i))->getValue();
   }
 
   return bits;
@@ -94,7 +94,7 @@ TableGenTypedInitRef tableGenBitsInitGetBitInit(TableGenTypedInitRef ti,
   if (!bits_init)
     return nullptr;
 
-  return wrap(static_cast<BitInit *>(bits_init->getBit(index)));
+  return wrap(static_cast<const BitInit *>(bits_init->getBit(index)));
 }
 
 TableGenBool tableGenIntInitGetValue(TableGenTypedInitRef ti,
@@ -181,7 +181,8 @@ TableGenBool tableGenPrintError(TableGenParserRef ref,
 }
 
 TableGenSourceLocationRef tableGenSourceLocationNull() {
-  return wrap(new ArrayRef(SMLoc()));
+  auto source_loc = SMLoc();
+  return wrap(new ArrayRef(source_loc));
 }
 
 TableGenSourceLocationRef
