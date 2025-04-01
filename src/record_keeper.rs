@@ -15,13 +15,13 @@ use crate::error::TableGenError;
 #[cfg(any(feature = "llvm16-0", feature = "llvm17-0"))]
 use crate::error::{SourceLocation, TableGenError, WithLocation};
 use crate::raw::{
+    TableGenRecordKeeperIteratorRef, TableGenRecordKeeperRef, TableGenRecordVectorRef,
     tableGenRecordKeeperFree, tableGenRecordKeeperGetAllDerivedDefinitions,
     tableGenRecordKeeperGetClass, tableGenRecordKeeperGetDef, tableGenRecordKeeperGetFirstClass,
     tableGenRecordKeeperGetFirstDef, tableGenRecordKeeperGetNextClass,
     tableGenRecordKeeperGetNextDef, tableGenRecordKeeperItemGetName,
     tableGenRecordKeeperItemGetRecord, tableGenRecordKeeperIteratorClone,
     tableGenRecordKeeperIteratorFree, tableGenRecordVectorFree, tableGenRecordVectorGet,
-    TableGenRecordKeeperIteratorRef, TableGenRecordKeeperRef, TableGenRecordVectorRef,
 };
 use crate::record::Record;
 use crate::string_ref::StringRef;
@@ -115,13 +115,17 @@ trait NextRecord {
 
 impl NextRecord for IsClass {
     unsafe fn next(raw: &mut TableGenRecordKeeperIteratorRef) {
-        tableGenRecordKeeperGetNextClass(raw);
+        unsafe {
+            tableGenRecordKeeperGetNextClass(raw);
+        }
     }
 }
 
 impl NextRecord for IsDef {
     unsafe fn next(raw: &mut TableGenRecordKeeperIteratorRef) {
-        tableGenRecordKeeperGetNextDef(raw);
+        unsafe {
+            tableGenRecordKeeperGetNextDef(raw);
+        }
     }
 }
 

@@ -126,8 +126,8 @@ pub use record::RecordValue;
 pub use record_keeper::RecordKeeper;
 
 use raw::{
-    tableGenAddIncludeDirectory, tableGenAddSource, tableGenAddSourceFile, tableGenFree,
-    tableGenGet, tableGenParse, TableGenParserRef,
+    TableGenParserRef, tableGenAddIncludeDirectory, tableGenAddSource, tableGenAddSourceFile,
+    tableGenFree, tableGenGet, tableGenParse,
 };
 use string_ref::StringRef;
 

@@ -1,7 +1,7 @@
 [package]
 name = "tblgen"
 version = "0.6.0"
-edition = "2021"
+edition = "2024"
 license = "MIT OR Apache-2.0"
 authors = ["Daan Vanoverloop", "Yota Toyama", "Edgar Luque"]
 description = "Safe Rust bindings for TableGen."
