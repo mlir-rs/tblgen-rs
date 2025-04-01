@@ -22,7 +22,7 @@ impl StringRef<'_> {
 
     pub unsafe fn from_option_raw(raw: TableGenStringRef) -> Option<Self> {
         if !raw.data.is_null() {
-            Some(Self::from_raw(raw))
+            Some(unsafe { Self::from_raw(raw) })
         } else {
             None
         }

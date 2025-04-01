@@ -31,7 +31,7 @@ using namespace llvm;
 namespace ctablegen {
 
 typedef std::map<std::string, std::unique_ptr<Record>, std::less<>> RecordMap;
-typedef std::vector<Record *> RecordVector;
+typedef std::vector<const Record *> RecordVector;
 typedef std::pair<std::string, TypedInit *> DagPair;
 
 class TableGenParser {
@@ -50,7 +50,7 @@ private:
 };
 
 // Utility
-TableGenRecTyKind tableGenFromRecType(RecTy *rt);
+TableGenRecTyKind tableGenFromRecType(const RecTy *rt);
 
 /// A simple raw ostream subclass that forwards write_impl calls to the
 /// user-supplied callback together with opaque user-supplied data.

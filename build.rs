@@ -4,7 +4,7 @@ use std::{
     ffi::OsStr,
     fs::read_dir,
     path::Path,
-    process::{exit, Command},
+    process::{Command, exit},
     str,
 };
 
@@ -14,8 +14,10 @@ const LLVM_MAJOR_VERSION: usize = if cfg!(feature = "llvm16-0") {
     17
 } else if cfg!(feature = "llvm18-0") {
     18
-} else {
+} else if cfg!(feature = "llvm19-0") {
     19
+} else {
+    20
 };
 
 fn main() {
@@ -82,8 +84,8 @@ fn run() -> Result<(), Box<dyn Error>> {
 }
 
 fn build_c_library() -> Result<(), Box<dyn Error>> {
-    env::set_var("CXXFLAGS", llvm_config("--cxxflags")?);
-    env::set_var("CFLAGS", llvm_config("--cflags")?);
+    unsafe { env::set_var("CXXFLAGS", llvm_config("--cxxflags")?) };
+    unsafe { env::set_var("CFLAGS", llvm_config("--cflags")?) };
 
     cc::Build::new()
         .cpp(true)

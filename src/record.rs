@@ -13,11 +13,11 @@ use std::ffi::c_void;
 use std::marker::PhantomData;
 
 use crate::raw::{
-    tableGenRecordGetFirstValue, tableGenRecordGetLoc, tableGenRecordGetName,
-    tableGenRecordGetValue, tableGenRecordIsAnonymous, tableGenRecordIsSubclassOf,
-    tableGenRecordPrint, tableGenRecordValGetLoc, tableGenRecordValGetNameInit,
-    tableGenRecordValGetValue, tableGenRecordValNext, tableGenRecordValPrint, TableGenRecordRef,
-    TableGenRecordValRef,
+    TableGenRecordRef, TableGenRecordValRef, tableGenRecordGetFirstValue, tableGenRecordGetLoc,
+    tableGenRecordGetName, tableGenRecordGetValue, tableGenRecordIsAnonymous,
+    tableGenRecordIsSubclassOf, tableGenRecordPrint, tableGenRecordValGetLoc,
+    tableGenRecordValGetNameInit, tableGenRecordValGetValue, tableGenRecordValNext,
+    tableGenRecordValPrint,
 };
 
 use crate::error::{Error, SourceLoc, SourceLocation, TableGenError, WithLocation};
@@ -259,8 +259,8 @@ impl RecordValue<'_> {
     ///
     /// The raw object must be valid.
     pub unsafe fn from_raw(ptr: TableGenRecordValRef) -> Self {
-        let name = StringInit::from_raw(tableGenRecordValGetNameInit(ptr));
-        let value = TypedInit::from_raw(tableGenRecordValGetValue(ptr));
+        let name = unsafe { StringInit::from_raw(tableGenRecordValGetNameInit(ptr)) };
+        let value = unsafe { TypedInit::from_raw(tableGenRecordValGetValue(ptr)) };
         Self {
             name,
             init: value,
