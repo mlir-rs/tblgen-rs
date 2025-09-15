@@ -22,9 +22,9 @@
 //! # Supported LLVM Versions
 //!
 //! An installation of LLVM is required to use this crate.
-//! The versions of LLVM currently supported are 16.x.x (default) and 17.x.x.
-//! Different LLVM version can be selected using features flags (llvm16-0 or
-//! llvm17-0).
+//! The versions of LLVM currently supported are 16.x.x, 17.x.x, 18.x.x,
+//! 19.x.x, 20.x.x, and 21.x.x. Different LLVM version can be selected using
+//! features flags (e.g., `llvm16-0` or `llvm17-0`).
 //!
 //! The `TABLEGEN_<version>_PREFIX` environment variable can be used to specify
 //! a custom directory of the LLVM installation.
@@ -67,7 +67,7 @@
 //!     .add_source(r#"include "mlir/IR/OpBase.td""#)?
 //!     .add_include_directory(&format!(
 //!         "{}/include",
-//!         std::env::var("TABLEGEN_200_PREFIX")?
+//!         std::env::var("TABLEGEN_210_PREFIX")?
 //!     ))
 //!     .parse()?;
 //! let i32_def = keeper.def("I32").expect("has I32 def");
@@ -88,7 +88,7 @@
 //!     .add_source_file("mlir/IR/OpBase.td")
 //!     .add_include_directory(&format!(
 //!         "{}/include",
-//!         std::env::var("TABLEGEN_200_PREFIX")?
+//!         std::env::var("TABLEGEN_210_PREFIX")?
 //!     ))
 //!     .parse()?;
 //! let i32_def = keeper.def("I32").expect("has I32 def");
