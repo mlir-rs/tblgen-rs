@@ -203,7 +203,7 @@ impl<'s> TableGenParser<'s> {
         }
     }
 
-    pub fn source_info(&self) -> SourceInfo {
+    pub fn source_info(&self) -> SourceInfo<'_> {
         SourceInfo(self)
     }
 

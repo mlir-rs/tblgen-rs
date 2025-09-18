@@ -57,7 +57,7 @@ impl<'s> RecordKeeper<'s> {
     }
 
     /// Returns the class with the given name.
-    pub fn class(&self, name: &str) -> Result<Record, Error> {
+    pub fn class(&self, name: &str) -> Result<Record<'_>, Error> {
         unsafe {
             let class = tableGenRecordKeeperGetClass(self.raw, StringRef::from(name).to_raw());
             if class.is_null() {
@@ -69,7 +69,7 @@ impl<'s> RecordKeeper<'s> {
     }
 
     /// Returns the definition with the given name.
-    pub fn def(&self, name: &str) -> Result<Record, Error> {
+    pub fn def(&self, name: &str) -> Result<Record<'_>, Error> {
         unsafe {
             let def = tableGenRecordKeeperGetDef(self.raw, StringRef::from(name).to_raw());
             if def.is_null() {
@@ -82,7 +82,7 @@ impl<'s> RecordKeeper<'s> {
 
     /// Returns an iterator over all definitions that derive from the class with
     /// the given name.
-    pub fn all_derived_definitions(&self, name: &str) -> RecordIter {
+    pub fn all_derived_definitions(&self, name: &str) -> RecordIter<'_> {
         unsafe {
             RecordIter::from_raw_vector(tableGenRecordKeeperGetAllDerivedDefinitions(
                 self.raw,
@@ -91,7 +91,7 @@ impl<'s> RecordKeeper<'s> {
         }
     }
 
-    pub fn source_info(&self) -> SourceInfo {
+    pub fn source_info(&self) -> SourceInfo<'_> {
         SourceInfo(&self.parser)
     }
 }
