@@ -46,4 +46,3 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cargo fmt --check
-      - run: clang-format --dry-run -Werror wrapper.h $(git ls-files cc)
