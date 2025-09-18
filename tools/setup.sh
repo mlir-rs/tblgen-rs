@@ -5,7 +5,7 @@ set -e
 llvm_version=20
 
 brew update
-brew install llvm@$llvm_version
+brew install llvm@$llvm_version zstd
 
 llvm_prefix=$(brew --prefix llvm@$llvm_version)
 
