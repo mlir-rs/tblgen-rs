@@ -20,7 +20,7 @@ jobs:
       - uses: homebrew/actions/setup-homebrew@master
       - run: tools/setup.sh
       - run: cargo build
-  test:
+  unit_test:
     strategy:
       fail-fast: false
       matrix:
@@ -49,3 +49,13 @@ jobs:
       - uses: actions/checkout@v4
       - run: cargo fmt --check
       - run: clang-format --dry-run -Werror wrapper.h $(git ls-files cc)
+  test:
+    needs:
+      - build
+      - unit_test
+      - lint
+      - format
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: for result in ${{ join(needs.*.result, ' ') }}; do [ $result = success ]; done
