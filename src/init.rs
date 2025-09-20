@@ -28,7 +28,10 @@ use crate::{
 };
 use paste::paste;
 
-use crate::{error::Error, error::TableGenError, record::Record};
+use crate::{
+    error::{Error, TableGenError},
+    record::Record,
+};
 use std::{
     ffi::c_void,
     fmt::{self, Debug, Display, Formatter},

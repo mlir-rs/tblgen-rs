@@ -14,18 +14,21 @@ use std::marker::PhantomData;
 use crate::error::TableGenError;
 #[cfg(any(feature = "llvm16-0", feature = "llvm17-0"))]
 use crate::error::{SourceLocation, TableGenError, WithLocation};
-use crate::raw::{
-    TableGenRecordKeeperIteratorRef, TableGenRecordKeeperRef, TableGenRecordVectorRef,
-    tableGenRecordKeeperFree, tableGenRecordKeeperGetAllDerivedDefinitions,
-    tableGenRecordKeeperGetClass, tableGenRecordKeeperGetDef, tableGenRecordKeeperGetFirstClass,
-    tableGenRecordKeeperGetFirstDef, tableGenRecordKeeperGetNextClass,
-    tableGenRecordKeeperGetNextDef, tableGenRecordKeeperItemGetName,
-    tableGenRecordKeeperItemGetRecord, tableGenRecordKeeperIteratorClone,
-    tableGenRecordKeeperIteratorFree, tableGenRecordVectorFree, tableGenRecordVectorGet,
+use crate::{
+    Error, SourceInfo, TableGenParser,
+    raw::{
+        TableGenRecordKeeperIteratorRef, TableGenRecordKeeperRef, TableGenRecordVectorRef,
+        tableGenRecordKeeperFree, tableGenRecordKeeperGetAllDerivedDefinitions,
+        tableGenRecordKeeperGetClass, tableGenRecordKeeperGetDef,
+        tableGenRecordKeeperGetFirstClass, tableGenRecordKeeperGetFirstDef,
+        tableGenRecordKeeperGetNextClass, tableGenRecordKeeperGetNextDef,
+        tableGenRecordKeeperItemGetName, tableGenRecordKeeperItemGetRecord,
+        tableGenRecordKeeperIteratorClone, tableGenRecordKeeperIteratorFree,
+        tableGenRecordVectorFree, tableGenRecordVectorGet,
+    },
+    record::Record,
+    string_ref::StringRef,
 };
-use crate::record::Record;
-use crate::string_ref::StringRef;
-use crate::{Error, SourceInfo, TableGenParser};
 
 /// Struct that holds all records from a TableGen file.
 #[derive(Debug, PartialEq, Eq)]
@@ -57,7 +60,7 @@ impl<'s> RecordKeeper<'s> {
     }
 
     /// Returns the class with the given name.
-    pub fn class(&self, name: &str) -> Result<Record, Error> {
+    pub fn class(&self, name: &str) -> Result<Record<'_>, Error> {
         unsafe {
             let class = tableGenRecordKeeperGetClass(self.raw, StringRef::from(name).to_raw());
             if class.is_null() {
@@ -69,7 +72,7 @@ impl<'s> RecordKeeper<'s> {
     }
 
     /// Returns the definition with the given name.
-    pub fn def(&self, name: &str) -> Result<Record, Error> {
+    pub fn def(&self, name: &str) -> Result<Record<'_>, Error> {
         unsafe {
             let def = tableGenRecordKeeperGetDef(self.raw, StringRef::from(name).to_raw());
             if def.is_null() {
@@ -82,7 +85,7 @@ impl<'s> RecordKeeper<'s> {
 
     /// Returns an iterator over all definitions that derive from the class with
     /// the given name.
-    pub fn all_derived_definitions(&self, name: &str) -> RecordIter {
+    pub fn all_derived_definitions(&self, name: &str) -> RecordIter<'_> {
         unsafe {
             RecordIter::from_raw_vector(tableGenRecordKeeperGetAllDerivedDefinitions(
                 self.raw,
@@ -91,7 +94,7 @@ impl<'s> RecordKeeper<'s> {
         }
     }
 
-    pub fn source_info(&self) -> SourceInfo {
+    pub fn source_info(&self) -> SourceInfo<'_> {
         SourceInfo(&self.parser)
     }
 }
