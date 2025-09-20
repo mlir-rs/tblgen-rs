@@ -12,12 +12,13 @@ documentation = "https://mlir-rs.github.io/tblgen-rs/tblgen/"
 exclude = ["doc/"]
 
 [features]
-default = ["llvm20-0"]
+default = ["llvm21-0"]
 llvm16-0 = []
 llvm17-0 = []
 llvm18-0 = []
 llvm19-0 = []
 llvm20-0 = []
+llvm21-0 = []
 
 [dependencies]
 thiserror = "2.0.12"
