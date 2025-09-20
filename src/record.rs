@@ -9,8 +9,7 @@
 // except according to those terms.
 
 use paste::paste;
-use std::ffi::c_void;
-use std::marker::PhantomData;
+use std::{ffi::c_void, marker::PhantomData};
 
 use crate::raw::{
     TableGenRecordRef, TableGenRecordValRef, tableGenRecordGetFirstValue, tableGenRecordGetLoc,
@@ -20,10 +19,12 @@ use crate::raw::{
     tableGenRecordValPrint,
 };
 
-use crate::error::{Error, SourceLoc, SourceLocation, TableGenError, WithLocation};
-use crate::init::{BitInit, DagInit, ListInit, StringInit, TypedInit};
-use crate::string_ref::StringRef;
-use crate::util::print_callback;
+use crate::{
+    error::{Error, SourceLoc, SourceLocation, TableGenError, WithLocation},
+    init::{BitInit, DagInit, ListInit, StringInit, TypedInit},
+    string_ref::StringRef,
+    util::print_callback,
+};
 use std::fmt::{self, Debug, Display, Formatter};
 
 /// An immutable reference to a TableGen record.
