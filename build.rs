@@ -98,7 +98,11 @@ fn build_c_library() -> Result<(), Box<dyn Error>> {
         )
         .include("cc/include")
         .include(llvm_config("--includedir")?)
-        .flag(if cfg!(target_env = "msvc") {"/WX"} else {"-Werror"})
+        .flag(if cfg!(target_env = "msvc") {
+            "/WX"
+        } else {
+            "-Werror"
+        })
         .std("c++17")
         .compile("CTableGen");
 
