@@ -35,7 +35,7 @@
 //! iterates over classes and defs defined in this file.
 //!
 //! ```rust
-//! use tblgen::{TableGenParser, RecordKeeper};
+//! use tblgen::{RecordKeeper, TableGenParser};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let keeper: RecordKeeper = TableGenParser::new()
@@ -48,7 +48,10 @@
 //!     .parse()?;
 //! assert_eq!(keeper.classes().next().unwrap().0, Ok("A"));
 //! assert_eq!(keeper.defs().next().unwrap().0, Ok("D"));
-//! assert_eq!(keeper.all_derived_definitions("A").next().unwrap().name(), Ok("D"));
+//! assert_eq!(
+//!     keeper.all_derived_definitions("A").next().unwrap().name(),
+//!     Ok("D")
+//! );
 //! # Ok(())
 //! # }
 //! ```
@@ -56,13 +59,16 @@
 //! By adding include paths, external TableGen files can be included.
 //!
 //! ```rust
-//! use tblgen::{TableGenParser, RecordKeeper};
 //! use std::path::Path;
+//! use tblgen::{RecordKeeper, TableGenParser};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let keeper: RecordKeeper = TableGenParser::new()
 //!     .add_source(r#"include "mlir/IR/OpBase.td""#)?
-//!     .add_include_directory(&format!("{}/include", std::env::var("TABLEGEN_200_PREFIX")?))
+//!     .add_include_directory(&format!(
+//!         "{}/include",
+//!         std::env::var("TABLEGEN_200_PREFIX")?
+//!     ))
 //!     .parse()?;
 //! let i32_def = keeper.def("I32").expect("has I32 def");
 //! assert!(i32_def.subclass_of("I"));
@@ -74,13 +80,16 @@
 //! You can also pass an included filename directly.
 //!
 //! ```rust
-//! use tblgen::{TableGenParser, RecordKeeper};
 //! use std::path::Path;
+//! use tblgen::{RecordKeeper, TableGenParser};
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! let keeper: RecordKeeper = TableGenParser::new()
 //!     .add_source_file("mlir/IR/OpBase.td")
-//!     .add_include_directory(&format!("{}/include", std::env::var("TABLEGEN_200_PREFIX")?))
+//!     .add_include_directory(&format!(
+//!         "{}/include",
+//!         std::env::var("TABLEGEN_200_PREFIX")?
+//!     ))
 //!     .parse()?;
 //! let i32_def = keeper.def("I32").expect("has I32 def");
 //! assert!(i32_def.subclass_of("I"));
@@ -113,16 +122,16 @@ pub mod raw {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
 
-use std::ffi::CStr;
-use std::ffi::CString;
-use std::marker::PhantomData;
-use std::sync::Mutex;
+use std::{
+    ffi::{CStr, CString},
+    marker::PhantomData,
+    sync::Mutex,
+};
 
 pub use error::Error;
 use error::TableGenError;
 pub use init::TypedInit;
-pub use record::Record;
-pub use record::RecordValue;
+pub use record::{Record, RecordValue};
 pub use record_keeper::RecordKeeper;
 
 use raw::{

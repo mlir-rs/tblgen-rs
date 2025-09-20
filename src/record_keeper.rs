@@ -14,18 +14,21 @@ use std::marker::PhantomData;
 use crate::error::TableGenError;
 #[cfg(any(feature = "llvm16-0", feature = "llvm17-0"))]
 use crate::error::{SourceLocation, TableGenError, WithLocation};
-use crate::raw::{
-    TableGenRecordKeeperIteratorRef, TableGenRecordKeeperRef, TableGenRecordVectorRef,
-    tableGenRecordKeeperFree, tableGenRecordKeeperGetAllDerivedDefinitions,
-    tableGenRecordKeeperGetClass, tableGenRecordKeeperGetDef, tableGenRecordKeeperGetFirstClass,
-    tableGenRecordKeeperGetFirstDef, tableGenRecordKeeperGetNextClass,
-    tableGenRecordKeeperGetNextDef, tableGenRecordKeeperItemGetName,
-    tableGenRecordKeeperItemGetRecord, tableGenRecordKeeperIteratorClone,
-    tableGenRecordKeeperIteratorFree, tableGenRecordVectorFree, tableGenRecordVectorGet,
+use crate::{
+    Error, SourceInfo, TableGenParser,
+    raw::{
+        TableGenRecordKeeperIteratorRef, TableGenRecordKeeperRef, TableGenRecordVectorRef,
+        tableGenRecordKeeperFree, tableGenRecordKeeperGetAllDerivedDefinitions,
+        tableGenRecordKeeperGetClass, tableGenRecordKeeperGetDef,
+        tableGenRecordKeeperGetFirstClass, tableGenRecordKeeperGetFirstDef,
+        tableGenRecordKeeperGetNextClass, tableGenRecordKeeperGetNextDef,
+        tableGenRecordKeeperItemGetName, tableGenRecordKeeperItemGetRecord,
+        tableGenRecordKeeperIteratorClone, tableGenRecordKeeperIteratorFree,
+        tableGenRecordVectorFree, tableGenRecordVectorGet,
+    },
+    record::Record,
+    string_ref::StringRef,
 };
-use crate::record::Record;
-use crate::string_ref::StringRef;
-use crate::{Error, SourceInfo, TableGenParser};
 
 /// Struct that holds all records from a TableGen file.
 #[derive(Debug, PartialEq, Eq)]
