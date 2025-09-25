@@ -1,6 +1,6 @@
 [package]
 name = "tblgen"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 authors = ["Daan Vanoverloop", "Yota Toyama", "Edgar Luque"]
@@ -25,5 +25,5 @@ thiserror = "2.0.12"
 paste = "1.0.15"
 
 [build-dependencies]
-bindgen = "0.71.1"
+bindgen = "0.72.1"
 cc = "1.2.17"
