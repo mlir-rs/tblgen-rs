@@ -2,7 +2,7 @@ name: test
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
 jobs:
   build:
@@ -16,9 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: swatinem/rust-cache@v2
-      - uses: homebrew/actions/setup-homebrew@master
-      - run: tools/setup.sh
+      - uses: ./.github/actions/setup
       - run: cargo build
   unit_test:
     strategy:
@@ -31,17 +29,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: swatinem/rust-cache@v2
-      - uses: homebrew/actions/setup-homebrew@master
-      - run: tools/setup.sh
+      - uses: ./.github/actions/setup
       - run: cargo test
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: swatinem/rust-cache@v2
-      - uses: homebrew/actions/setup-homebrew@master
-      - run: tools/setup.sh
+      - uses: ./.github/actions/setup
       - run: cargo clippy -- -D warnings
   format:
     runs-on: ubuntu-latest
