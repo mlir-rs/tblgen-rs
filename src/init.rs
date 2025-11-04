@@ -157,6 +157,7 @@ impl<'a> TryFrom<TypedInit<'a>> for String {
             TypedInit::String(v) | TypedInit::Code(v) => {
                 Ok(Self::try_from(v).map_err(TableGenError::from)?)
             }
+            TypedInit::Invalid => Ok(Default::default()),
             _ => Err(TableGenError::InitConversion {
                 from: value.variant_name(),
                 to: std::any::type_name::<String>(),
@@ -174,6 +175,7 @@ impl<'a> TryFrom<TypedInit<'a>> for &'a str {
             TypedInit::String(v) | TypedInit::Code(v) => {
                 Ok(v.to_str().map_err(TableGenError::from)?)
             }
+            TypedInit::Invalid => Ok(Default::default()),
             _ => Err(TableGenError::InitConversion {
                 from: value.variant_name(),
                 to: std::any::type_name::<&'a str>(),
@@ -200,21 +202,18 @@ impl<'a> TypedInit<'a> {
     /// The raw object must be valid.
     #[allow(non_upper_case_globals)]
     pub unsafe fn from_raw(init: TableGenTypedInitRef) -> Self {
-        unsafe {
-            let t = tableGenInitRecType(init);
+        use TableGenRecTyKind::*;
 
-            use TableGenRecTyKind::*;
-            match t {
-                TableGenBitRecTyKind => Self::Bit(BitInit::from_raw(init)),
-                TableGenBitsRecTyKind => Self::Bits(BitsInit::from_raw(init)),
-                TableGenCodeRecTyKind => Self::Code(StringInit::from_raw(init)),
-                TableGenIntRecTyKind => TypedInit::Int(IntInit::from_raw(init)),
-                TableGenStringRecTyKind => Self::String(StringInit::from_raw(init)),
-                TableGenListRecTyKind => TypedInit::List(ListInit::from_raw(init)),
-                TableGenDagRecTyKind => TypedInit::Dag(DagInit::from_raw(init)),
-                TableGenRecordRecTyKind => Self::Def(DefInit::from_raw(init)),
-                _ => Self::Invalid,
-            }
+        match unsafe { tableGenInitRecType(init) } {
+            TableGenBitRecTyKind => Self::Bit(unsafe { BitInit::from_raw(init) }),
+            TableGenBitsRecTyKind => Self::Bits(unsafe { BitsInit::from_raw(init) }),
+            TableGenCodeRecTyKind => Self::Code(unsafe { StringInit::from_raw(init) }),
+            TableGenIntRecTyKind => TypedInit::Int(unsafe { IntInit::from_raw(init) }),
+            TableGenStringRecTyKind => Self::String(unsafe { StringInit::from_raw(init) }),
+            TableGenListRecTyKind => TypedInit::List(unsafe { ListInit::from_raw(init) }),
+            TableGenDagRecTyKind => TypedInit::Dag(unsafe { DagInit::from_raw(init) }),
+            TableGenRecordRecTyKind => Self::Def(unsafe { DefInit::from_raw(init) }),
+            _ => Self::Invalid,
         }
     }
 }
@@ -522,7 +521,9 @@ mod tests {
     );
     test_init!(int, "int a = 42;", 42);
     test_init!(string, "string a = \"hi\";", "hi");
+    test_init!(invalid_string, "string a = ?;", "");
     test_init!(code, "code a = \"hi\";", "hi");
+    test_init!(invalid_code, "code a = ?;", "");
 
     #[test]
     fn dag() {
