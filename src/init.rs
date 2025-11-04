@@ -157,7 +157,6 @@ impl<'a> TryFrom<TypedInit<'a>> for String {
             TypedInit::String(v) | TypedInit::Code(v) => {
                 Ok(Self::try_from(v).map_err(TableGenError::from)?)
             }
-            TypedInit::Invalid => Ok(Default::default()),
             _ => Err(TableGenError::InitConversion {
                 from: value.variant_name(),
                 to: std::any::type_name::<String>(),
@@ -175,7 +174,6 @@ impl<'a> TryFrom<TypedInit<'a>> for &'a str {
             TypedInit::String(v) | TypedInit::Code(v) => {
                 Ok(v.to_str().map_err(TableGenError::from)?)
             }
-            TypedInit::Invalid => Ok(Default::default()),
             _ => Err(TableGenError::InitConversion {
                 from: value.variant_name(),
                 to: std::any::type_name::<&'a str>(),
@@ -521,9 +519,7 @@ mod tests {
     );
     test_init!(int, "int a = 42;", 42);
     test_init!(string, "string a = \"hi\";", "hi");
-    test_init!(invalid_string, "string a = ?;", "");
     test_init!(code, "code a = \"hi\";", "hi");
-    test_init!(invalid_code, "code a = ?;", "");
 
     #[test]
     fn dag() {
