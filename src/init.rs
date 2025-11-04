@@ -207,11 +207,12 @@ impl<'a> TypedInit<'a> {
             match t {
                 TableGenBitRecTyKind => Self::Bit(BitInit::from_raw(init)),
                 TableGenBitsRecTyKind => Self::Bits(BitsInit::from_raw(init)),
-                TableGenDagRecTyKind => TypedInit::Dag(DagInit::from_raw(init)),
+                TableGenCodeRecTyKind => Self::Code(StringInit::from_raw(init)),
                 TableGenIntRecTyKind => TypedInit::Int(IntInit::from_raw(init)),
-                TableGenListRecTyKind => TypedInit::List(ListInit::from_raw(init)),
-                TableGenRecordRecTyKind => Self::Def(DefInit::from_raw(init)),
                 TableGenStringRecTyKind => Self::String(StringInit::from_raw(init)),
+                TableGenListRecTyKind => TypedInit::List(ListInit::from_raw(init)),
+                TableGenDagRecTyKind => TypedInit::Dag(DagInit::from_raw(init)),
+                TableGenRecordRecTyKind => Self::Def(DefInit::from_raw(init)),
                 _ => Self::Invalid,
             }
         }
@@ -521,6 +522,7 @@ mod tests {
     );
     test_init!(int, "int a = 42;", 42);
     test_init!(string, "string a = \"hi\";", "hi");
+    test_init!(code, "code a = \"hi\";", "hi");
 
     #[test]
     fn dag() {
