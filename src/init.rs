@@ -200,21 +200,18 @@ impl<'a> TypedInit<'a> {
     /// The raw object must be valid.
     #[allow(non_upper_case_globals)]
     pub unsafe fn from_raw(init: TableGenTypedInitRef) -> Self {
-        unsafe {
-            let t = tableGenInitRecType(init);
+        use TableGenRecTyKind::*;
 
-            use TableGenRecTyKind::*;
-            match t {
-                TableGenBitRecTyKind => Self::Bit(BitInit::from_raw(init)),
-                TableGenBitsRecTyKind => Self::Bits(BitsInit::from_raw(init)),
-                TableGenCodeRecTyKind => Self::Code(StringInit::from_raw(init)),
-                TableGenIntRecTyKind => TypedInit::Int(IntInit::from_raw(init)),
-                TableGenStringRecTyKind => Self::String(StringInit::from_raw(init)),
-                TableGenListRecTyKind => TypedInit::List(ListInit::from_raw(init)),
-                TableGenDagRecTyKind => TypedInit::Dag(DagInit::from_raw(init)),
-                TableGenRecordRecTyKind => Self::Def(DefInit::from_raw(init)),
-                _ => Self::Invalid,
-            }
+        match unsafe { tableGenInitRecType(init) } {
+            TableGenBitRecTyKind => Self::Bit(unsafe { BitInit::from_raw(init) }),
+            TableGenBitsRecTyKind => Self::Bits(unsafe { BitsInit::from_raw(init) }),
+            TableGenCodeRecTyKind => Self::Code(unsafe { StringInit::from_raw(init) }),
+            TableGenIntRecTyKind => TypedInit::Int(unsafe { IntInit::from_raw(init) }),
+            TableGenStringRecTyKind => Self::String(unsafe { StringInit::from_raw(init) }),
+            TableGenListRecTyKind => TypedInit::List(unsafe { ListInit::from_raw(init) }),
+            TableGenDagRecTyKind => TypedInit::Dag(unsafe { DagInit::from_raw(init) }),
+            TableGenRecordRecTyKind => Self::Def(unsafe { DefInit::from_raw(init) }),
+            _ => Self::Invalid,
         }
     }
 }
