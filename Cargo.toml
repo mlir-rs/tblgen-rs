@@ -1,15 +1,23 @@
 [package]
 name = "tblgen"
-version = "0.7.0"
+version = "0.7.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 authors = ["Daan Vanoverloop", "Yota Toyama", "Edgar Luque"]
 description = "Safe Rust bindings for TableGen."
 repository = "https://github.com/mlir-rs/tblgen-rs"
-keywords = ["llvm", "tablegen", "bindings", "wrapper"]
+keywords = ["bindings", "llvm", "tablegen", "wrapper"]
 categories = ["development-tools::ffi"]
 documentation = "https://mlir-rs.github.io/tblgen-rs/tblgen/"
 exclude = ["doc/"]
+
+[dependencies]
+paste = "1.0.15"
+thiserror = "2.0.12"
+
+[build-dependencies]
+bindgen = "0.72.1"
+cc = "1.2.17"
 
 [features]
 default = ["llvm21-0"]
@@ -19,11 +27,3 @@ llvm18-0 = []
 llvm19-0 = []
 llvm20-0 = []
 llvm21-0 = []
-
-[dependencies]
-thiserror = "2.0.12"
-paste = "1.0.15"
-
-[build-dependencies]
-bindgen = "0.72.1"
-cc = "1.2.17"
