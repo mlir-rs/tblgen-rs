@@ -521,7 +521,9 @@ mod tests {
     );
     test_init!(int, "int a = 42;", 42);
     test_init!(string, "string a = \"hi\";", "hi");
+    test_init!(invalid_string, "string a = ?;", "");
     test_init!(code, "code a = \"hi\";", "hi");
+    test_init!(invalid_code, "code a = ?;", "");
 
     #[test]
     fn dag() {
