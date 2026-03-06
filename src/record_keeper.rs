@@ -29,7 +29,7 @@ use crate::{
         tableGenRecordKeeperGetNextClass, tableGenRecordKeeperGetNextDef,
         tableGenRecordKeeperItemGetName, tableGenRecordKeeperItemGetRecord,
         tableGenRecordKeeperIteratorClone, tableGenRecordKeeperIteratorFree,
-        tableGenRecordVectorFree, tableGenRecordVectorGet,
+        tableGenRecordVectorFree, tableGenRecordVectorGet, tableGenRecordVectorSize,
     },
     record::Record,
     string_ref::StringRef,
@@ -173,6 +173,12 @@ impl<'a, T: NextRecord> Iterator for NamedRecordIter<'a, T> {
 
 impl<T> Clone for NamedRecordIter<'_, T> {
     fn clone(&self) -> Self {
+        if self.raw.is_null() {
+            return Self {
+                raw: std::ptr::null_mut(),
+                _kind: PhantomData,
+            };
+        }
         unsafe { Self::from_raw(tableGenRecordKeeperIteratorClone(self.raw)) }
     }
 }
@@ -186,14 +192,17 @@ impl<T> Drop for NamedRecordIter<'_, T> {
 pub struct RecordIter<'a> {
     raw: TableGenRecordVectorRef,
     index: usize,
+    len: usize,
     _reference: PhantomData<&'a ()>,
 }
 
 impl<'a> RecordIter<'a> {
     unsafe fn from_raw_vector(ptr: TableGenRecordVectorRef) -> RecordIter<'a> {
+        let len = unsafe { tableGenRecordVectorSize(ptr) };
         RecordIter {
             raw: ptr,
             index: 0,
+            len,
             _reference: PhantomData,
         }
     }
@@ -203,6 +212,9 @@ impl<'a> Iterator for RecordIter<'a> {
     type Item = Record<'a>;
 
     fn next(&mut self) -> Option<Record<'a>> {
+        if self.index >= self.len {
+            return None;
+        }
         let next = unsafe { tableGenRecordVectorGet(self.raw, self.index) };
         self.index += 1;
         if next.is_null() {
@@ -211,7 +223,14 @@ impl<'a> Iterator for RecordIter<'a> {
             unsafe { Some(Record::from_raw(next)) }
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.len.saturating_sub(self.index);
+        (remaining, Some(remaining))
+    }
 }
+
+impl ExactSizeIterator for RecordIter<'_> {}
 
 impl Drop for RecordIter<'_> {
     fn drop(&mut self) {
@@ -284,5 +303,63 @@ mod test {
             .expect("valid tablegen");
         assert_eq!(rk.class("A").expect("class exists").name().unwrap(), "A");
         assert_eq!(rk.def("D1").expect("def exists").name().unwrap(), "D1");
+    }
+
+    #[test]
+    fn clone_exhausted_named_iter() {
+        let rk = TableGenParser::new()
+            .add_source("class A; class B;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let mut it = rk.classes();
+        while it.next().is_some() {}
+        // Must not segfault when cloning an exhausted iterator.
+        let mut cloned = it.clone();
+        assert!(cloned.next().is_none());
+    }
+
+    #[test]
+    fn empty_classes_and_defs() {
+        let rk = TableGenParser::new()
+            .add_source("// empty")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        assert_eq!(rk.classes().count(), 0);
+        assert_eq!(rk.defs().count(), 0);
+    }
+
+    #[test]
+    fn record_iter_size_hint() {
+        let rk = TableGenParser::new()
+            .add_source(
+                r#"
+                class A;
+                def D1: A;
+                def D2: A;
+                def D3: A;
+                "#,
+            )
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let mut iter = rk.all_derived_definitions("A");
+        assert_eq!(iter.size_hint(), (3, Some(3)));
+        assert_eq!(iter.len(), 3);
+        iter.next();
+        assert_eq!(iter.size_hint(), (2, Some(2)));
+        iter.next();
+        assert_eq!(iter.size_hint(), (1, Some(1)));
+        iter.next();
+        assert_eq!(iter.size_hint(), (0, Some(0)));
+        assert!(iter.next().is_none());
+        assert_eq!(iter.size_hint(), (0, Some(0)));
+    }
+
+    #[test]
+    fn add_source_interior_null() {
+        let result = TableGenParser::new().add_source("def A;\0invalid");
+        assert!(result.is_err());
     }
 }

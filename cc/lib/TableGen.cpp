@@ -17,7 +17,7 @@ using ctablegen::RecordMap;
 using ctablegen::tableGenFromRecType;
 
 RecordKeeper *ctablegen::TableGenParser::parse() {
-  auto recordKeeper = new RecordKeeper;
+  auto recordKeeper = std::unique_ptr<RecordKeeper>(new RecordKeeper);
   sourceMgr.setIncludeDirs(includeDirs);
 
   for (const auto &file : files) {
@@ -29,9 +29,8 @@ RecordKeeper *ctablegen::TableGenParser::parse() {
 
   bool result = TableGenParseFile(sourceMgr, *recordKeeper);
   if (!result) {
-    return recordKeeper;
+    return recordKeeper.release();
   }
-  delete recordKeeper;
   return nullptr;
 }
 
