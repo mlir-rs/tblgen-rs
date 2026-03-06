@@ -94,7 +94,9 @@ TableGenTypedInitRef tableGenBitsInitGetBitInit(TableGenTypedInitRef ti,
   if (!bits_init)
     return nullptr;
 
-  return wrap(static_cast<const BitInit *>(bits_init->getBit(index)));
+  // Return the raw Init* -- may be BitInit or VarBitInit.
+  // Caller must use tableGenBitInitIsVarBit() to distinguish.
+  return wrap(const_cast<TypedInit *>(dyn_cast<TypedInit>(bits_init->getBit(index))));
 }
 
 TableGenBool tableGenIntInitGetValue(TableGenTypedInitRef ti,
@@ -150,6 +152,37 @@ void tableGenInitPrint(TableGenTypedInitRef ti, TableGenStringCallback callback,
 }
 
 void tableGenInitDump(TableGenTypedInitRef ti) { unwrap(ti)->dump(); }
+
+// VarBitInit support: exposes LLVM's VarBitInit for variable bit references
+// (e.g., lda{17}) that BitsInit::getBit() may return instead of BitInit.
+
+TableGenBool tableGenBitInitIsVarBit(TableGenTypedInitRef ti) {
+  if (!ti)
+    return false;
+  return isa<VarBitInit>(unwrap(ti));
+}
+
+TableGenStringRef tableGenVarBitInitGetVarName(TableGenTypedInitRef ti) {
+  if (!ti)
+    return TableGenStringRef{.data = nullptr, .len = 0};
+  auto var_bit = dyn_cast<VarBitInit>(unwrap(ti));
+  if (!var_bit)
+    return TableGenStringRef{.data = nullptr, .len = 0};
+  auto var_init = dyn_cast<VarInit>(var_bit->getBitVar());
+  if (!var_init)
+    return TableGenStringRef{.data = nullptr, .len = 0};
+  auto name = var_init->getName();
+  return TableGenStringRef{.data = name.data(), .len = name.size()};
+}
+
+size_t tableGenVarBitInitGetBitNum(TableGenTypedInitRef ti) {
+  if (!ti)
+    return 0;
+  auto var_bit = dyn_cast<VarBitInit>(unwrap(ti));
+  if (!var_bit)
+    return 0;
+  return var_bit->getBitNum();
+}
 
 TableGenBool tableGenPrintError(TableGenParserRef ref,
                                 TableGenSourceLocationRef loc_ref,
