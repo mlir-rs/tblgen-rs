@@ -2,7 +2,7 @@
 // Shows how tblgen-rs can be used to drive code generation from TableGen
 // descriptions, which is the primary use case of this crate.
 
-use tblgen::{TableGenParser, RecordKeeper};
+use tblgen::{RecordKeeper, TableGenParser};
 
 const SOURCE: &str = r#"
     // Register file
@@ -40,7 +40,7 @@ const SOURCE: &str = r#"
 fn print_registers(keeper: &RecordKeeper) -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Registers ===");
     for reg in keeper.all_derived_definitions("Register") {
-        let name  = reg.string_value("Name")?;
+        let name = reg.string_value("Name")?;
         let index = reg.int_value("Index")?;
         println!("  {:4}  index={}", name, index);
     }

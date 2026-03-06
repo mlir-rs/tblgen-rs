@@ -45,7 +45,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print!("values     = [");
     for (i, elem) in list.iter().enumerate() {
         let n: i64 = elem.try_into()?;
-        if i > 0 { print!(", "); }
+        if i > 0 {
+            print!(", ");
+        }
         print!("{}", n);
     }
     println!("]");
@@ -56,7 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for (arg_name, init) in dag.args() {
         match arg_name {
             Some(n) => println!("  arg ${} = {}", n, init),
-            None    => println!("  arg     = {}", init),
+            None => println!("  arg     = {}", init),
         }
     }
 
@@ -68,15 +70,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n--- all fields ---");
     for field in rec.values() {
         let type_name = match field.init {
-            TypedInit::Bit(_)    => "bit",
-            TypedInit::Bits(_)   => "bits",
-            TypedInit::Int(_)    => "int",
+            TypedInit::Bit(_) => "bit",
+            TypedInit::Bits(_) => "bits",
+            TypedInit::Int(_) => "int",
             TypedInit::String(_) => "string",
-            TypedInit::List(_)   => "list",
-            TypedInit::Dag(_)    => "dag",
-            TypedInit::Def(_)    => "def",
-            TypedInit::Code(_)   => "code",
-            TypedInit::Invalid   => "invalid",
+            TypedInit::List(_) => "list",
+            TypedInit::Dag(_) => "dag",
+            TypedInit::Def(_) => "def",
+            TypedInit::Code(_) => "code",
+            TypedInit::Invalid => "invalid",
         };
         println!("  {:10} : {}", field.name.to_str()?, type_name);
     }

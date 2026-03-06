@@ -2,7 +2,7 @@
 // When a field access fails, the error carries a source location that can be
 // enriched with the original TableGen source via `add_source_info`.
 
-use tblgen::{TableGenParser};
+use tblgen::TableGenParser;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let source = r#"
