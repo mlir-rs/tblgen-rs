@@ -8,7 +8,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::marker::PhantomData;
+use std::{fmt, marker::PhantomData};
 
 #[cfg(any(
     feature = "llvm18-0",
@@ -137,6 +137,7 @@ impl NextRecord for IsDef {
     }
 }
 
+/// Iterator over named records (classes or definitions) in a [`RecordKeeper`].
 #[derive(Debug)]
 pub struct NamedRecordIter<'a, T> {
     raw: TableGenRecordKeeperIteratorRef,
@@ -189,11 +190,24 @@ impl<T> Drop for NamedRecordIter<'_, T> {
     }
 }
 
+impl<T: NextRecord> std::iter::FusedIterator for NamedRecordIter<'_, T> {}
+
+/// Iterator over records derived from a given class in a [`RecordKeeper`].
 pub struct RecordIter<'a> {
     raw: TableGenRecordVectorRef,
     index: usize,
-    len: usize,
+    back: usize,
     _reference: PhantomData<&'a ()>,
+}
+
+impl fmt::Debug for RecordIter<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "RecordIter {{ remaining: {} }}",
+            self.back - self.index
+        )
+    }
 }
 
 impl<'a> RecordIter<'a> {
@@ -202,7 +216,7 @@ impl<'a> RecordIter<'a> {
         RecordIter {
             raw: ptr,
             index: 0,
-            len,
+            back: len,
             _reference: PhantomData,
         }
     }
@@ -212,7 +226,7 @@ impl<'a> Iterator for RecordIter<'a> {
     type Item = Record<'a>;
 
     fn next(&mut self) -> Option<Record<'a>> {
-        if self.index >= self.len {
+        if self.index >= self.back {
             return None;
         }
         let next = unsafe { tableGenRecordVectorGet(self.raw, self.index) };
@@ -225,12 +239,31 @@ impl<'a> Iterator for RecordIter<'a> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining = self.len.saturating_sub(self.index);
+        let remaining = self.back.saturating_sub(self.index);
         (remaining, Some(remaining))
     }
 }
 
+impl<'a> DoubleEndedIterator for RecordIter<'a> {
+    fn next_back(&mut self) -> Option<Record<'a>> {
+        if self.index >= self.back {
+            return None;
+        }
+        self.back -= 1;
+        let next = unsafe { tableGenRecordVectorGet(self.raw, self.back) };
+        if next.is_null() {
+            // Restore back so the element is not silently skipped on the next call.
+            self.back += 1;
+            None
+        } else {
+            unsafe { Some(Record::from_raw(next)) }
+        }
+    }
+}
+
 impl ExactSizeIterator for RecordIter<'_> {}
+
+impl std::iter::FusedIterator for RecordIter<'_> {}
 
 impl Drop for RecordIter<'_> {
     fn drop(&mut self) {
@@ -361,5 +394,41 @@ mod test {
     fn add_source_interior_null() {
         let result = TableGenParser::new().add_source("def A;\0invalid");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn record_iter_double_ended() {
+        let rk = TableGenParser::new()
+            .add_source("class A; def D1: A; def D2: A; def D3: A; def D4: A;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        // Collect from both ends alternately.
+        let mut iter = rk.all_derived_definitions("A");
+        assert_eq!(iter.next().unwrap().name().unwrap(), "D1");
+        assert_eq!(iter.next_back().unwrap().name().unwrap(), "D4");
+        assert_eq!(iter.next().unwrap().name().unwrap(), "D2");
+        assert_eq!(iter.next_back().unwrap().name().unwrap(), "D3");
+        assert!(iter.next().is_none());
+        assert!(iter.next_back().is_none());
+    }
+
+    #[test]
+    fn record_iter_size_hint_double_ended() {
+        let rk = TableGenParser::new()
+            .add_source("class A; def D1: A; def D2: A; def D3: A;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let mut iter = rk.all_derived_definitions("A");
+        assert_eq!(iter.len(), 3);
+        iter.next();
+        assert_eq!(iter.len(), 2);
+        iter.next_back();
+        assert_eq!(iter.len(), 1);
+        iter.next();
+        assert_eq!(iter.len(), 0);
+        assert!(iter.next().is_none());
+        assert!(iter.next_back().is_none());
     }
 }

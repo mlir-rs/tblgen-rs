@@ -12,9 +12,10 @@ use paste::paste;
 use std::{ffi::c_void, marker::PhantomData};
 
 use crate::raw::{
-    TableGenRecordRef, TableGenRecordValRef, tableGenRecordGetFirstValue, tableGenRecordGetLoc,
-    tableGenRecordGetName, tableGenRecordGetValue, tableGenRecordIsAnonymous,
-    tableGenRecordIsSubclassOf, tableGenRecordPrint, tableGenRecordValGetLoc,
+    TableGenRecordRef, TableGenRecordValRef, tableGenRecordDump, tableGenRecordGetFieldType,
+    tableGenRecordGetFirstValue, tableGenRecordGetLoc, tableGenRecordGetName,
+    tableGenRecordGetValue, tableGenRecordIsAnonymous, tableGenRecordIsSubclassOf,
+    tableGenRecordPrint, tableGenRecordValDump, tableGenRecordValGetLoc,
     tableGenRecordValGetNameInit, tableGenRecordValGetValue, tableGenRecordValNext,
     tableGenRecordValPrint,
 };
@@ -59,6 +60,12 @@ impl Debug for Record<'_> {
         writeln!(formatter, "Record(")?;
         Display::fmt(self, formatter)?;
         write!(formatter, ")")
+    }
+}
+
+impl std::hash::Hash for Record<'_> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.raw.hash(state);
     }
 }
 
@@ -190,6 +197,31 @@ impl<'a> Record<'a> {
     pub fn values(self) -> RecordValueIter<'a> {
         RecordValueIter::new(self)
     }
+
+    /// Returns `true` if the record has a field with the given name.
+    pub fn has_field(self, name: &str) -> bool {
+        let v = unsafe { tableGenRecordGetValue(self.raw, StringRef::from(name).to_raw()) };
+        !v.is_null()
+    }
+
+    /// Returns the [`TableGenRecTyKind`](crate::raw::TableGenRecTyKind) of the
+    /// field with the given name, or `None` if the field does not exist.
+    pub fn field_type(self, name: &str) -> Option<crate::raw::TableGenRecTyKind::Type> {
+        use crate::raw::TableGenRecTyKind::TableGenInvalidRecTyKind;
+        let kind = unsafe {
+            tableGenRecordGetFieldType(self.raw, StringRef::from(name).to_raw())
+        };
+        if kind == TableGenInvalidRecTyKind {
+            None
+        } else {
+            Some(kind)
+        }
+    }
+
+    /// Dumps the record to stderr (for debugging).
+    pub fn dump(self) {
+        unsafe { tableGenRecordDump(self.raw) }
+    }
 }
 
 impl SourceLoc for Record<'_> {
@@ -253,6 +285,12 @@ impl Display for RecordValue<'_> {
     }
 }
 
+impl std::hash::Hash for RecordValue<'_> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.raw.hash(state);
+    }
+}
+
 impl RecordValue<'_> {
     /// Creates a record from a raw object.
     ///
@@ -269,6 +307,11 @@ impl RecordValue<'_> {
             _reference: PhantomData,
         }
     }
+
+    /// Dumps this record value to stderr (for debugging).
+    pub fn dump(self) {
+        unsafe { tableGenRecordValDump(self.raw) }
+    }
 }
 
 impl SourceLoc for RecordValue<'_> {
@@ -277,6 +320,7 @@ impl SourceLoc for RecordValue<'_> {
     }
 }
 
+/// Iterator over the fields of a [`Record`].
 #[derive(Debug, Clone)]
 pub struct RecordValueIter<'a> {
     record: TableGenRecordRef,
@@ -308,6 +352,8 @@ impl<'a> Iterator for RecordValueIter<'a> {
         Some(res)
     }
 }
+
+impl std::iter::FusedIterator for RecordValueIter<'_> {}
 
 #[cfg(test)]
 mod tests {
@@ -474,5 +520,34 @@ mod tests {
         } else {
             panic!("expected error")
         }
+    }
+
+    #[test]
+    fn has_field() {
+        let rk = TableGenParser::new()
+            .add_source("def A { int x = 1; }")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let a = rk.def("A").expect("def A exists");
+        assert!(a.has_field("x"));
+        assert!(!a.has_field("y"));
+    }
+
+    #[test]
+    fn field_type() {
+        use crate::raw::TableGenRecTyKind::{
+            TableGenIntRecTyKind, TableGenStringRecTyKind, TableGenBitRecTyKind,
+        };
+        let rk = TableGenParser::new()
+            .add_source("def A { int i = 1; string s = \"hi\"; bit b = 1; }")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let a = rk.def("A").expect("def A exists");
+        assert_eq!(a.field_type("i"), Some(TableGenIntRecTyKind));
+        assert_eq!(a.field_type("s"), Some(TableGenStringRecTyKind));
+        assert_eq!(a.field_type("b"), Some(TableGenBitRecTyKind));
+        assert_eq!(a.field_type("nonexistent"), None);
     }
 }

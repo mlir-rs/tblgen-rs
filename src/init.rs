@@ -20,9 +20,9 @@ use crate::{
         TableGenRecTyKind, TableGenTypedInitRef, tableGenBitInitGetValue, tableGenBitInitIsVarBit,
         tableGenBitsInitGetBitInit, tableGenBitsInitGetNumBits, tableGenDagRecordArgName,
         tableGenDagRecordGet, tableGenDagRecordNumArgs, tableGenDagRecordOperator,
-        tableGenDefInitGetValue, tableGenInitPrint, tableGenInitRecType, tableGenIntInitGetValue,
-        tableGenListRecordGet, tableGenListRecordNumElements, tableGenStringInitGetValue,
-        tableGenVarBitInitGetBitNum, tableGenVarBitInitGetVarName,
+        tableGenDefInitGetValue, tableGenInitDump, tableGenInitPrint, tableGenInitRecType,
+        tableGenIntInitGetValue, tableGenListRecordGet, tableGenListRecordNumElements,
+        tableGenStringInitGetValue, tableGenVarBitInitGetBitNum, tableGenVarBitInitGetVarName,
     },
     string_ref::StringRef,
     util::print_callback,
@@ -104,6 +104,23 @@ impl Debug for TypedInit<'_> {
             Self::Invalid => write!(f, ""),
         }?;
         write!(f, "))")
+    }
+}
+
+impl std::hash::Hash for TypedInit<'_> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            Self::Bit(v) => v.hash(state),
+            Self::Bits(v) => v.hash(state),
+            Self::Code(v) => v.hash(state),
+            Self::Int(v) => v.hash(state),
+            Self::String(v) => v.hash(state),
+            Self::List(v) => v.hash(state),
+            Self::Dag(v) => v.hash(state),
+            Self::Def(v) => v.hash(state),
+            Self::Invalid => {}
+        }
     }
 }
 
@@ -236,6 +253,17 @@ macro_rules! init {
                     raw,
                     _reference: PhantomData,
                 }
+            }
+
+            /// Dumps this init to stderr (for debugging).
+            pub fn dump(self) {
+                unsafe { tableGenInitDump(self.raw) }
+            }
+        }
+
+        impl std::hash::Hash for $name<'_> {
+            fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+                self.raw.hash(state);
             }
         }
 
@@ -449,9 +477,11 @@ impl<'a> DagInit<'a> {
     ///
     /// Use [`DagInit::num_args`] and [`DagInit::get`] for indexed access if you only need values.
     pub fn args(self) -> DagIter<'a> {
+        let back = self.num_args();
         DagIter {
             dag: self,
             index: 0,
+            back,
         }
     }
 
@@ -482,22 +512,55 @@ impl<'a> DagInit<'a> {
     }
 }
 
+/// Iterator over the arguments of a [`DagInit`].
 #[derive(Debug, Clone)]
 pub struct DagIter<'a> {
     dag: DagInit<'a>,
     index: usize,
+    back: usize,
 }
 
 impl<'a> Iterator for DagIter<'a> {
     type Item = (Option<&'a str>, TypedInit<'a>);
 
     fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.back {
+            return None;
+        }
         let next = self.dag.get(self.index)?;
         let name = self.dag.name(self.index);
         self.index += 1;
         Some((name, next))
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.back.saturating_sub(self.index);
+        (remaining, Some(remaining))
+    }
 }
+
+impl<'a> DoubleEndedIterator for DagIter<'a> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index >= self.back {
+            return None;
+        }
+        self.back -= 1;
+        match self.dag.get(self.back) {
+            Some(next) => {
+                let name = self.dag.name(self.back);
+                Some((name, next))
+            }
+            None => {
+                self.back += 1;
+                None
+            }
+        }
+    }
+}
+
+impl ExactSizeIterator for DagIter<'_> {}
+
+impl std::iter::FusedIterator for DagIter<'_> {}
 
 init!(ListInit);
 
@@ -506,9 +569,11 @@ impl<'a> ListInit<'a> {
     ///
     /// The iterator yields values of type [`TypedInit`].
     pub fn iter(self) -> ListIter<'a> {
+        let back = self.len();
         ListIter {
             list: self,
             index: 0,
+            back,
         }
     }
 
@@ -533,16 +598,21 @@ impl<'a> ListInit<'a> {
     }
 }
 
+/// Iterator over the elements of a [`ListInit`].
 #[derive(Debug, Clone)]
 pub struct ListIter<'a> {
     list: ListInit<'a>,
     index: usize,
+    back: usize,
 }
 
 impl<'a> Iterator for ListIter<'a> {
     type Item = TypedInit<'a>;
 
     fn next(&mut self) -> Option<TypedInit<'a>> {
+        if self.index >= self.back {
+            return None;
+        }
         let next = unsafe { tableGenListRecordGet(self.list.raw, self.index) };
         self.index += 1;
         if !next.is_null() {
@@ -551,7 +621,33 @@ impl<'a> Iterator for ListIter<'a> {
             None
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.back.saturating_sub(self.index);
+        (remaining, Some(remaining))
+    }
 }
+
+impl<'a> DoubleEndedIterator for ListIter<'a> {
+    fn next_back(&mut self) -> Option<TypedInit<'a>> {
+        if self.index >= self.back {
+            return None;
+        }
+        self.back -= 1;
+        let next = unsafe { tableGenListRecordGet(self.list.raw, self.back) };
+        if !next.is_null() {
+            Some(unsafe { TypedInit::from_raw(next) })
+        } else {
+            // Restore back so the element is not silently skipped on the next call.
+            self.back += 1;
+            None
+        }
+    }
+}
+
+impl ExactSizeIterator for ListIter<'_> {}
+
+impl std::iter::FusedIterator for ListIter<'_> {}
 
 #[cfg(test)]
 mod tests {
@@ -739,6 +835,54 @@ mod tests {
         assert_eq!(iter.clone().nth(1).unwrap().try_into(), Ok(1));
         assert_eq!(iter.clone().nth(2).unwrap().try_into(), Ok(2));
         assert_eq!(iter.clone().nth(3).unwrap().try_into(), Ok(3));
+    }
+
+    #[test]
+    fn list_double_ended() {
+        let rk = TableGenParser::new()
+            .add_source("def A { list<int> l = [10, 20, 30, 40]; }")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let l: ListInit = rk
+            .def("A").unwrap().value("l").unwrap().try_into().unwrap();
+        let mut iter = l.iter();
+        assert_eq!(iter.len(), 4);
+        assert_eq!(iter.next().unwrap().try_into(), Ok(10i64));
+        assert_eq!(iter.len(), 3);
+        assert_eq!(iter.next_back().unwrap().try_into(), Ok(40i64));
+        assert_eq!(iter.len(), 2);
+        assert_eq!(iter.next().unwrap().try_into(), Ok(20i64));
+        assert_eq!(iter.next_back().unwrap().try_into(), Ok(30i64));
+        assert_eq!(iter.len(), 0);
+        assert!(iter.next().is_none());
+        assert!(iter.next_back().is_none());
+    }
+
+    #[test]
+    fn dag_double_ended() {
+        let rk = TableGenParser::new()
+            .add_source(
+                "def op; def A { int i = 1; } def B { int i = 2; } def C { int i = 3; }
+                 def R { dag d = (op A, B, C); }",
+            )
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let dag: DagInit = rk.def("R").unwrap().value("d").unwrap().try_into().unwrap();
+        let mut iter = dag.args();
+        assert_eq!(iter.len(), 3);
+        let (_, first) = iter.next().unwrap();
+        assert_eq!(Record::try_from(first).unwrap().int_value("i"), Ok(1));
+        assert_eq!(iter.len(), 2);
+        let (_, last) = iter.next_back().unwrap();
+        assert_eq!(Record::try_from(last).unwrap().int_value("i"), Ok(3));
+        assert_eq!(iter.len(), 1);
+        let (_, mid) = iter.next().unwrap();
+        assert_eq!(Record::try_from(mid).unwrap().int_value("i"), Ok(2));
+        assert_eq!(iter.len(), 0);
+        assert!(iter.next().is_none());
+        assert!(iter.next_back().is_none());
     }
 
     #[test]
