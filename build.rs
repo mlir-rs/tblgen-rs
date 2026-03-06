@@ -50,6 +50,18 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     let link_static = resolve_link_mode()?;
 
+    // When using the shared libLLVM, it may not export all C++ symbols that
+    // libCTableGen.a references (e.g. VarInit::getName()). Link the available
+    // static component libs to cover the gap.
+    if !link_static {
+        let libdir = llvm_config(false, "--libdir")?;
+        for lib in &["LLVMTableGen", "LLVMSupport", "LLVMDemangle"] {
+            if Path::new(&format!("{}/lib{}.a", libdir, lib)).exists() {
+                println!("cargo:rustc-link-lib=static={}", lib);
+            }
+        }
+    }
+
     for name in llvm_config(link_static, "--libnames")?
         .trim()
         .split(' ')

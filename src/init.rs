@@ -17,11 +17,12 @@
 
 use crate::{
     raw::{
-        TableGenRecTyKind, TableGenTypedInitRef, tableGenBitInitGetValue,
+        TableGenRecTyKind, TableGenTypedInitRef, tableGenBitInitGetValue, tableGenBitInitIsVarBit,
         tableGenBitsInitGetBitInit, tableGenBitsInitGetNumBits, tableGenDagRecordArgName,
         tableGenDagRecordGet, tableGenDagRecordNumArgs, tableGenDagRecordOperator,
         tableGenDefInitGetValue, tableGenInitPrint, tableGenInitRecType, tableGenIntInitGetValue,
         tableGenListRecordGet, tableGenListRecordNumElements, tableGenStringInitGetValue,
+        tableGenVarBitInitGetBitNum, tableGenVarBitInitGetVarName,
     },
     string_ref::StringRef,
     util::print_callback,
@@ -266,12 +267,55 @@ macro_rules! init {
 
 init!(BitInit);
 
+impl<'a> BitInit<'a> {
+    /// Returns true if this bit is a variable reference (e.g., `lda{17}`)
+    /// rather than a literal 0/1.
+    pub fn is_var_bit(self) -> bool {
+        unsafe { tableGenBitInitIsVarBit(self.raw) != 0 }
+    }
+
+    /// If this bit is a variable reference, returns `(field_name, bit_index)`.
+    /// For example, `lda{17}` returns `Some(("lda", 17))`.
+    pub fn as_var_bit(self) -> Option<(&'a str, usize)> {
+        if !self.is_var_bit() {
+            return None;
+        }
+        let name_ref = unsafe { tableGenVarBitInitGetVarName(self.raw) };
+        if name_ref.data.is_null() {
+            return None;
+        }
+        let name = unsafe {
+            std::str::from_utf8(std::slice::from_raw_parts(
+                name_ref.data as *const u8,
+                name_ref.len,
+            ))
+            .ok()?
+        };
+        let bit_num = unsafe { tableGenVarBitInitGetBitNum(self.raw) };
+        Some((name, bit_num))
+    }
+
+    /// If this bit is a literal 0/1, returns its boolean value.
+    /// Returns `None` for variable references.
+    pub fn as_literal(self) -> Option<bool> {
+        if self.is_var_bit() {
+            return None;
+        }
+        let mut bit = -1i8;
+        let ok = unsafe { tableGenBitInitGetValue(self.raw, &mut bit) };
+        if ok > 0 && (bit == 0 || bit == 1) {
+            Some(bit != 0)
+        } else {
+            None
+        }
+    }
+}
+
 impl<'a> From<BitInit<'a>> for bool {
     fn from(value: BitInit<'a>) -> Self {
-        let mut bit = -1;
-        unsafe { tableGenBitInitGetValue(value.raw, &mut bit) };
-        assert!(bit == 0 || bit == 1);
-        bit != 0
+        value
+            .as_literal()
+            .expect("BitInit is a variable reference (VarBitInit), not a literal; use as_literal() or as_var_bit() instead")
     }
 }
 
@@ -594,5 +638,54 @@ mod tests {
         assert_eq!(iter.clone().nth(1).unwrap().try_into(), Ok(1));
         assert_eq!(iter.clone().nth(2).unwrap().try_into(), Ok(2));
         assert_eq!(iter.clone().nth(3).unwrap().try_into(), Ok(3));
+    }
+
+    #[test]
+    fn varbit() {
+        // Access the class template before parameter substitution.
+        // bits<4> val = src produces VarBitInit elements: src{0}..src{3}.
+        let rk = TableGenParser::new()
+            .add_source("class Foo<bits<4> src> { bits<4> val = src; }")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let bits: BitsInit = rk
+            .class("Foo")
+            .expect("class Foo exists")
+            .value("val")
+            .expect("field val exists")
+            .init
+            .as_bits()
+            .expect("is BitsInit");
+        assert_eq!(bits.num_bits(), 4);
+        for i in 0..4 {
+            let bit = bits.bit(i).expect("bit in range");
+            assert!(bit.is_var_bit());
+            assert_eq!(bit.as_var_bit(), Some(("Foo:src", i)));
+            assert_eq!(bit.as_literal(), None);
+        }
+    }
+
+    #[test]
+    fn literal_bit_methods() {
+        let rk = TableGenParser::new()
+            .add_source("def A { bits<4> a = { 0, 1, 0, 1 }; }")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let bits: BitsInit = rk
+            .def("A")
+            .expect("def A exists")
+            .value("a")
+            .expect("field a exists")
+            .init
+            .as_bits()
+            .expect("is BitsInit");
+        for i in 0..4 {
+            let bit = bits.bit(i).expect("bit in range");
+            assert!(!bit.is_var_bit());
+            assert!(bit.as_var_bit().is_none());
+            assert!(bit.as_literal().is_some());
+        }
     }
 }
