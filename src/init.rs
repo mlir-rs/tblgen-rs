@@ -313,10 +313,9 @@ impl<'a> BitInit<'a> {
 
 impl<'a> From<BitInit<'a>> for bool {
     fn from(value: BitInit<'a>) -> Self {
-        let mut bit = -1;
-        unsafe { tableGenBitInitGetValue(value.raw, &mut bit) };
-        assert!(bit == 0 || bit == 1);
-        bit != 0
+        value
+            .as_literal()
+            .expect("BitInit is a variable reference (VarBitInit), not a literal — use as_literal() or as_var_bit() instead")
     }
 }
 
