@@ -639,4 +639,53 @@ mod tests {
         assert_eq!(iter.clone().nth(2).unwrap().try_into(), Ok(2));
         assert_eq!(iter.clone().nth(3).unwrap().try_into(), Ok(3));
     }
+
+    #[test]
+    fn varbit() {
+        // Access the class template before parameter substitution.
+        // bits<4> val = src produces VarBitInit elements: src{0}..src{3}.
+        let rk = TableGenParser::new()
+            .add_source("class Foo<bits<4> src> { bits<4> val = src; }")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let bits: BitsInit = rk
+            .class("Foo")
+            .expect("class Foo exists")
+            .value("val")
+            .expect("field val exists")
+            .init
+            .as_bits()
+            .expect("is BitsInit");
+        assert_eq!(bits.num_bits(), 4);
+        for i in 0..4 {
+            let bit = bits.bit(i).expect("bit in range");
+            assert!(bit.is_var_bit());
+            assert_eq!(bit.as_var_bit(), Some(("Foo:src", i)));
+            assert_eq!(bit.as_literal(), None);
+        }
+    }
+
+    #[test]
+    fn literal_bit_methods() {
+        let rk = TableGenParser::new()
+            .add_source("def A { bits<4> a = { 0, 1, 0, 1 }; }")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let bits: BitsInit = rk
+            .def("A")
+            .expect("def A exists")
+            .value("a")
+            .expect("field a exists")
+            .init
+            .as_bits()
+            .expect("is BitsInit");
+        for i in 0..4 {
+            let bit = bits.bit(i).expect("bit in range");
+            assert!(!bit.is_var_bit());
+            assert!(bit.as_var_bit().is_none());
+            assert!(bit.as_literal().is_some());
+        }
+    }
 }
