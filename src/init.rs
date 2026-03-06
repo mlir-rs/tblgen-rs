@@ -18,7 +18,6 @@
 use crate::{
     raw::{
         TableGenRecTyKind, TableGenTypedInitRef, tableGenBitInitGetValue,
-        tableGenBitInitIsVarBit, tableGenVarBitInitGetBitNum, tableGenVarBitInitGetVarName,
         tableGenBitsInitGetBitInit, tableGenBitsInitGetNumBits, tableGenDagRecordArgName,
         tableGenDagRecordGet, tableGenDagRecordNumArgs, tableGenDagRecordOperator,
         tableGenDefInitGetValue, tableGenInitPrint, tableGenInitRecType, tableGenIntInitGetValue,
@@ -266,50 +265,6 @@ macro_rules! init {
 }
 
 init!(BitInit);
-
-impl<'a> BitInit<'a> {
-    /// Returns true if this bit is a variable reference (e.g., `lda{17}`)
-    /// rather than a literal 0/1.
-    pub fn is_var_bit(self) -> bool {
-        unsafe { tableGenBitInitIsVarBit(self.raw) != 0 }
-    }
-
-    /// If this bit is a variable reference, returns `(field_name, bit_index)`.
-    /// For example, `lda{17}` returns `Some(("lda", 17))`.
-    pub fn as_var_bit(self) -> Option<(&'a str, usize)> {
-        if !self.is_var_bit() {
-            return None;
-        }
-        let name_ref = unsafe { tableGenVarBitInitGetVarName(self.raw) };
-        if name_ref.data.is_null() {
-            return None;
-        }
-        let name = unsafe {
-            std::str::from_utf8(std::slice::from_raw_parts(
-                name_ref.data as *const u8,
-                name_ref.len,
-            ))
-            .ok()?
-        };
-        let bit_num = unsafe { tableGenVarBitInitGetBitNum(self.raw) };
-        Some((name, bit_num))
-    }
-
-    /// If this bit is a literal 0/1, returns its boolean value.
-    /// Returns `None` for variable references.
-    pub fn as_literal(self) -> Option<bool> {
-        if self.is_var_bit() {
-            return None;
-        }
-        let mut bit = -1i8;
-        let ok = unsafe { tableGenBitInitGetValue(self.raw, &mut bit) };
-        if ok > 0 && (bit == 0 || bit == 1) {
-            Some(bit != 0)
-        } else {
-            None
-        }
-    }
-}
 
 impl<'a> From<BitInit<'a>> for bool {
     fn from(value: BitInit<'a>) -> Self {

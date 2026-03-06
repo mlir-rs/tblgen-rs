@@ -173,11 +173,6 @@ TableGenSourceLocationRef tableGenSourceLocationNull();
 TableGenSourceLocationRef
 tableGenSourceLocationClone(TableGenSourceLocationRef loc_ref);
 
-// VarBitInit support (variable bit references in BitsInit fields)
-TableGenBool tableGenBitInitIsVarBit(TableGenTypedInitRef ti);
-TableGenStringRef tableGenVarBitInitGetVarName(TableGenTypedInitRef ti);
-size_t tableGenVarBitInitGetBitNum(TableGenTypedInitRef ti);
-
 // Memory
 void tableGenSourceLocationFree(TableGenSourceLocationRef loc_ref);
 void tableGenBitArrayFree(int8_t bit_array[]);
