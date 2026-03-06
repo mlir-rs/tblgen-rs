@@ -844,8 +844,7 @@ mod tests {
             .unwrap()
             .parse()
             .expect("valid tablegen");
-        let l: ListInit = rk
-            .def("A").unwrap().value("l").unwrap().try_into().unwrap();
+        let l: ListInit = rk.def("A").unwrap().value("l").unwrap().try_into().unwrap();
         let mut iter = l.iter();
         assert_eq!(iter.len(), 4);
         assert_eq!(iter.next().unwrap().try_into(), Ok(10i64));

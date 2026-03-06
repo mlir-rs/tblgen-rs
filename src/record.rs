@@ -208,9 +208,7 @@ impl<'a> Record<'a> {
     /// field with the given name, or `None` if the field does not exist.
     pub fn field_type(self, name: &str) -> Option<crate::raw::TableGenRecTyKind::Type> {
         use crate::raw::TableGenRecTyKind::TableGenInvalidRecTyKind;
-        let kind = unsafe {
-            tableGenRecordGetFieldType(self.raw, StringRef::from(name).to_raw())
-        };
+        let kind = unsafe { tableGenRecordGetFieldType(self.raw, StringRef::from(name).to_raw()) };
         if kind == TableGenInvalidRecTyKind {
             None
         } else {
@@ -537,7 +535,7 @@ mod tests {
     #[test]
     fn field_type() {
         use crate::raw::TableGenRecTyKind::{
-            TableGenIntRecTyKind, TableGenStringRecTyKind, TableGenBitRecTyKind,
+            TableGenBitRecTyKind, TableGenIntRecTyKind, TableGenStringRecTyKind,
         };
         let rk = TableGenParser::new()
             .add_source("def A { int i = 1; string s = \"hi\"; bit b = 1; }")
