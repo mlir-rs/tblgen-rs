@@ -41,18 +41,37 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-changed=cc");
-    println!("cargo:rustc-link-search={}", llvm_config(false, "--libdir")?);
+    println!(
+        "cargo:rustc-link-search={}",
+        llvm_config(false, "--libdir")?
+    );
 
     build_c_library()?;
 
     let link_static = resolve_link_mode()?;
 
-    for name in llvm_config(link_static, "--libnames")?.trim().split(' ').filter(|s| !s.is_empty()) {
-        let link_type = if name.ends_with(".a") { "static=" } else { "dylib=" };
-        println!("cargo:rustc-link-lib={}{}", link_type, parse_library_name(name)?);
+    for name in llvm_config(link_static, "--libnames")?
+        .trim()
+        .split(' ')
+        .filter(|s| !s.is_empty())
+    {
+        let link_type = if name.ends_with(".a") {
+            "static="
+        } else {
+            "dylib="
+        };
+        println!(
+            "cargo:rustc-link-lib={}{}",
+            link_type,
+            parse_library_name(name)?
+        );
     }
 
-    for flag in llvm_config(link_static, "--system-libs")?.trim().split(' ').filter(|s| !s.is_empty()) {
+    for flag in llvm_config(link_static, "--system-libs")?
+        .trim()
+        .split(' ')
+        .filter(|s| !s.is_empty())
+    {
         let flag = flag.trim_start_matches("-l");
 
         if flag.starts_with('/') {
