@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.7.3] - Unreleased
+## [0.8.0] - Unreleased
 
 ### Fixed
 
