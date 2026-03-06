@@ -96,7 +96,8 @@ TableGenTypedInitRef tableGenBitsInitGetBitInit(TableGenTypedInitRef ti,
 
   // Return the raw Init* -- may be BitInit or VarBitInit.
   // Caller must use tableGenBitInitIsVarBit() to distinguish.
-  return wrap(const_cast<TypedInit *>(dyn_cast<TypedInit>(bits_init->getBit(index))));
+  return wrap(
+      const_cast<TypedInit *>(dyn_cast<TypedInit>(bits_init->getBit(index))));
 }
 
 TableGenBool tableGenIntInitGetValue(TableGenTypedInitRef ti,
