@@ -422,7 +422,11 @@ init!(DagInit);
 impl<'a> DagInit<'a> {
     /// Returns an iterator over the arguments of the dag.
     ///
-    /// The iterator yields tuples `(&str, TypedInit)`.
+    /// The iterator yields tuples `(Option<&str>, TypedInit)` where the first element is the
+    /// argument name, or `None` if the argument is unnamed (e.g. positional args like
+    /// `(add r0, r1, r2)`).
+    ///
+    /// Use [`DagInit::num_args`] and [`DagInit::get`] for indexed access if you only need values.
     pub fn args(self) -> DagIter<'a> {
         DagIter {
             dag: self,
@@ -464,17 +468,13 @@ pub struct DagIter<'a> {
 }
 
 impl<'a> Iterator for DagIter<'a> {
-    type Item = (&'a str, TypedInit<'a>);
+    type Item = (Option<&'a str>, TypedInit<'a>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let next = self.dag.get(self.index);
+        let next = self.dag.get(self.index)?;
         let name = self.dag.name(self.index);
         self.index += 1;
-        if let (Some(next), Some(name)) = (next, name) {
-            Some((name, next))
-        } else {
-            None
-        }
+        Some((name, next))
     }
 }
 
@@ -608,15 +608,87 @@ mod tests {
                 name,
                 Record::try_from(init).expect("is record").int_value("i")
             )),
-            Some(("src1", Ok(4)))
+            Some((Some("src1"), Ok(4)))
         );
         assert_eq!(
             args.nth(1).map(|(name, init)| (
                 name,
                 Record::try_from(init).expect("is record").string_value("s")
             )),
-            Some(("src2", Ok("test".into())))
+            Some((Some("src2"), Ok("test".into())))
         );
+    }
+
+    #[test]
+    fn dag_unnamed_args() {
+        let rk = TableGenParser::new()
+            .add_source(
+                "
+                def add;
+                def X { int i = 1; }
+                def Y { int i = 2; }
+                def A {
+                    dag args = (add X, Y);
+                }
+                ",
+            )
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let a: DagInit = rk
+            .def("A")
+            .expect("def A exists")
+            .value("args")
+            .expect("field args exists")
+            .try_into()
+            .expect("is dag init");
+        assert_eq!(a.num_args(), 2);
+        let collected: Vec<_> = a
+            .args()
+            .map(|(name, init)| {
+                (
+                    name,
+                    Record::try_from(init).expect("is record").int_value("i"),
+                )
+            })
+            .collect();
+        assert_eq!(collected, vec![(None, Ok(1)), (None, Ok(2))]);
+    }
+
+    #[test]
+    fn dag_mixed_named_unnamed_args() {
+        let rk = TableGenParser::new()
+            .add_source(
+                "
+                def op;
+                def X { int i = 10; }
+                def Y { int i = 20; }
+                def A {
+                    dag args = (op X:$named, Y);
+                }
+                ",
+            )
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let a: DagInit = rk
+            .def("A")
+            .expect("def A exists")
+            .value("args")
+            .expect("field args exists")
+            .try_into()
+            .expect("is dag init");
+        assert_eq!(a.num_args(), 2);
+        let collected: Vec<_> = a
+            .args()
+            .map(|(name, init)| {
+                (
+                    name,
+                    Record::try_from(init).expect("is record").int_value("i"),
+                )
+            })
+            .collect();
+        assert_eq!(collected, vec![(Some("named"), Ok(10)), (None, Ok(20))]);
     }
 
     #[test]
