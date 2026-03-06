@@ -645,7 +645,12 @@ mod tests {
         assert_eq!(a.num_args(), 2);
         let collected: Vec<_> = a
             .args()
-            .map(|(name, init)| (name, Record::try_from(init).expect("is record").int_value("i")))
+            .map(|(name, init)| {
+                (
+                    name,
+                    Record::try_from(init).expect("is record").int_value("i"),
+                )
+            })
             .collect();
         assert_eq!(collected, vec![(None, Ok(1)), (None, Ok(2))]);
     }
@@ -676,7 +681,12 @@ mod tests {
         assert_eq!(a.num_args(), 2);
         let collected: Vec<_> = a
             .args()
-            .map(|(name, init)| (name, Record::try_from(init).expect("is record").int_value("i")))
+            .map(|(name, init)| {
+                (
+                    name,
+                    Record::try_from(init).expect("is record").int_value("i"),
+                )
+            })
             .collect();
         assert_eq!(collected, vec![(Some("named"), Ok(10)), (None, Ok(20))]);
     }
