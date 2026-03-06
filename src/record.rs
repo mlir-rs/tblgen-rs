@@ -300,13 +300,12 @@ impl<'a> Iterator for RecordValueIter<'a> {
     type Item = RecordValue<'a>;
 
     fn next(&mut self) -> Option<RecordValue<'a>> {
-        let res = if self.current.is_null() {
-            None
-        } else {
-            unsafe { Some(RecordValue::from_raw(self.current)) }
-        };
+        if self.current.is_null() {
+            return None;
+        }
+        let res = unsafe { RecordValue::from_raw(self.current) };
         self.current = unsafe { tableGenRecordValNext(self.record, self.current) };
-        res
+        Some(res)
     }
 }
 
@@ -369,7 +368,10 @@ mod tests {
                     assert!(v.name.to_str() == Ok("size"));
                     v.init.as_int().map_err(|e| e.set_location(v))
                 })
-                .map(|i| i.into()),
+                .and_then(|i| {
+                    i64::try_from(i)
+                        .map_err(|e| e.with_location(crate::error::SourceLocation::none()))
+                }),
             Ok(42)
         );
     }
@@ -395,7 +397,7 @@ mod tests {
             match v.init {
                 TypedInit::Int(i) => {
                     assert_eq!(v.name.to_str(), Ok("a"));
-                    assert_eq!(i64::from(i), 5);
+                    assert_eq!(i64::try_from(i).unwrap(), 5);
                 }
                 TypedInit::String(i) => {
                     assert_eq!(v.name.to_str(), Ok("n"));
@@ -404,6 +406,21 @@ mod tests {
                 _ => panic!("unexpected type"),
             }
         }
+    }
+
+    #[test]
+    fn empty_record_values() {
+        let rk = TableGenParser::new()
+            .add_source("def Empty;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let r = rk.def("Empty").expect("def Empty exists");
+        assert_eq!(r.values().count(), 0);
+        // Calling next() on an already-exhausted iterator must not invoke UB.
+        let mut iter = r.values();
+        assert!(iter.next().is_none());
+        assert!(iter.next().is_none());
     }
 
     #[test]

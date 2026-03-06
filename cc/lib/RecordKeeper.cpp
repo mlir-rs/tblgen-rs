@@ -40,6 +40,7 @@ void tableGenRecordKeeperGetNextClass(TableGenRecordKeeperIteratorRef *item) {
   auto *it = unwrap(*item);
   auto end = (*it)->second->getRecords().getClasses().end();
   if (++*it == end) {
+    delete it;
     *item = nullptr;
   }
 }
@@ -48,6 +49,7 @@ void tableGenRecordKeeperGetNextDef(TableGenRecordKeeperIteratorRef *item) {
   auto *it = unwrap(*item);
   auto end = (*it)->second->getRecords().getDefs().end();
   if (++*it == end) {
+    delete it;
     *item = nullptr;
   }
 }
@@ -107,6 +109,10 @@ TableGenRecordRef tableGenRecordVectorGet(TableGenRecordVectorRef vec_ref,
   if (index < vec->size())
     return wrap(((*vec)[index]));
   return nullptr;
+}
+
+size_t tableGenRecordVectorSize(TableGenRecordVectorRef vec_ref) {
+  return unwrap(vec_ref)->size();
 }
 
 void tableGenRecordVectorFree(TableGenRecordVectorRef vec_ref) {
