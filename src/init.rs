@@ -17,12 +17,12 @@
 
 use crate::{
     raw::{
-        TableGenRecTyKind, TableGenTypedInitRef, tableGenBitInitGetValue,
-        tableGenBitInitIsVarBit, tableGenVarBitInitGetBitNum, tableGenVarBitInitGetVarName,
+        TableGenRecTyKind, TableGenTypedInitRef, tableGenBitInitGetValue, tableGenBitInitIsVarBit,
         tableGenBitsInitGetBitInit, tableGenBitsInitGetNumBits, tableGenDagRecordArgName,
         tableGenDagRecordGet, tableGenDagRecordNumArgs, tableGenDagRecordOperator,
         tableGenDefInitGetValue, tableGenInitPrint, tableGenInitRecType, tableGenIntInitGetValue,
         tableGenListRecordGet, tableGenListRecordNumElements, tableGenStringInitGetValue,
+        tableGenVarBitInitGetBitNum, tableGenVarBitInitGetVarName,
     },
     string_ref::StringRef,
     util::print_callback,
