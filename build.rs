@@ -30,7 +30,7 @@ fn main() {
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
-    let version = llvm_config("--version")?;
+    let version = llvm_config(false, "--version")?;
 
     if !version.starts_with(&format!("{LLVM_MAJOR_VERSION}.")) {
         return Err(format!(
@@ -41,15 +41,37 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-changed=cc");
-    println!("cargo:rustc-link-search={}", llvm_config("--libdir")?);
+    println!(
+        "cargo:rustc-link-search={}",
+        llvm_config(false, "--libdir")?
+    );
 
     build_c_library()?;
 
-    for name in llvm_config("--libnames")?.trim().split(' ') {
-        println!("cargo:rustc-link-lib=static={}", parse_library_name(name)?);
+    let link_static = resolve_link_mode()?;
+
+    for name in llvm_config(link_static, "--libnames")?
+        .trim()
+        .split(' ')
+        .filter(|s| !s.is_empty())
+    {
+        let link_type = if name.ends_with(".a") {
+            "static="
+        } else {
+            "dylib="
+        };
+        println!(
+            "cargo:rustc-link-lib={}{}",
+            link_type,
+            parse_library_name(name)?
+        );
     }
 
-    for flag in llvm_config("--system-libs")?.trim().split(' ') {
+    for flag in llvm_config(link_static, "--system-libs")?
+        .trim()
+        .split(' ')
+        .filter(|s| !s.is_empty())
+    {
         let flag = flag.trim_start_matches("-l");
 
         if flag.starts_with('/') {
@@ -76,7 +98,7 @@ fn run() -> Result<(), Box<dyn Error>> {
     bindgen::builder()
         .header("wrapper.h")
         .clang_arg("-Icc/include")
-        .clang_arg(format!("-I{}", llvm_config("--includedir")?))
+        .clang_arg(format!("-I{}", llvm_config(false, "--includedir")?))
         .default_enum_style(bindgen::EnumVariation::ModuleConsts)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()?
@@ -86,8 +108,8 @@ fn run() -> Result<(), Box<dyn Error>> {
 }
 
 fn build_c_library() -> Result<(), Box<dyn Error>> {
-    unsafe { env::set_var("CXXFLAGS", llvm_config("--cxxflags")?) };
-    unsafe { env::set_var("CFLAGS", llvm_config("--cflags")?) };
+    unsafe { env::set_var("CXXFLAGS", llvm_config(false, "--cxxflags")?) };
+    unsafe { env::set_var("CFLAGS", llvm_config(false, "--cflags")?) };
 
     cc::Build::new()
         .cpp(true)
@@ -99,7 +121,7 @@ fn build_c_library() -> Result<(), Box<dyn Error>> {
                 .filter(|path| path.is_file() && path.extension() == Some(OsStr::new("cpp"))),
         )
         .include("cc/include")
-        .include(llvm_config("--includedir")?)
+        .include(llvm_config(false, "--includedir")?)
         .flag(if cfg!(target_env = "msvc") {
             "/WX"
         } else {
@@ -121,25 +143,41 @@ fn get_system_libcpp() -> Option<&'static str> {
     }
 }
 
-fn llvm_config(argument: &str) -> Result<String, Box<dyn Error>> {
+fn resolve_link_mode() -> Result<bool, Box<dyn Error>> {
+    let available = llvm_config(true, "--libnames").is_ok();
+    if cfg!(feature = "force-static") {
+        if !available {
+            return Err(
+                "LLVM static libraries not available but `force-static` feature is enabled".into(),
+            );
+        }
+        Ok(true)
+    } else {
+        Ok(available)
+    }
+}
+
+fn llvm_config(link_static: bool, argument: &str) -> Result<String, Box<dyn Error>> {
     let prefix = env::var(format!("TABLEGEN_{}0_PREFIX", LLVM_MAJOR_VERSION))
         .map(|path| Path::new(&path).join("bin"))
         .unwrap_or_default();
+    let static_flag = if link_static { "--link-static " } else { "" };
     let call = format!(
-        "{} --link-static {argument}",
+        "{} {static_flag}{argument}",
         prefix.join("llvm-config").display()
     );
 
-    Ok(str::from_utf8(
-        &if cfg!(target_os = "windows") {
-            Command::new("cmd").args(["/C", &call]).output()?
-        } else {
-            Command::new("sh").arg("-c").arg(&call).output()?
-        }
-        .stdout,
-    )?
-    .trim()
-    .to_string())
+    let output = if cfg!(target_os = "windows") {
+        Command::new("cmd").args(["/C", &call]).output()?
+    } else {
+        Command::new("sh").arg("-c").arg(&call).output()?
+    };
+
+    if !output.status.success() {
+        return Err(format!("llvm-config {static_flag}{argument} failed").into());
+    }
+
+    Ok(str::from_utf8(&output.stdout)?.trim().to_string())
 }
 
 fn parse_library_name(name: &str) -> Result<&str, String> {
