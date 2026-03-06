@@ -119,9 +119,32 @@ fn run() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+fn filter_fortify_source(flags: &str) -> String {
+    flags
+        .split_whitespace()
+        .filter(|flag| !flag.starts_with("-D_FORTIFY_SOURCE"))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 fn build_c_library() -> Result<(), Box<dyn Error>> {
-    unsafe { env::set_var("CXXFLAGS", llvm_config(false, "--cxxflags")?) };
-    unsafe { env::set_var("CFLAGS", llvm_config(false, "--cflags")?) };
+    let raw_cxxflags = llvm_config(false, "--cxxflags")?;
+    let raw_cflags = llvm_config(false, "--cflags")?;
+
+    // The cc crate does not add -O when OPT_LEVEL=0, so -D_FORTIFY_SOURCE (which
+    // glibc requires to be paired with optimization) causes a #warning that
+    // -Werror turns into a hard error. Strip it only when compiling without
+    // optimization; otherwise keep it for the runtime hardening it provides.
+    let (cxxflags, cflags) = if env::var("OPT_LEVEL").as_deref() == Ok("0") {
+        (
+            filter_fortify_source(&raw_cxxflags),
+            filter_fortify_source(&raw_cflags),
+        )
+    } else {
+        (raw_cxxflags, raw_cflags)
+    };
+    unsafe { env::set_var("CXXFLAGS", cxxflags) };
+    unsafe { env::set_var("CFLAGS", cflags) };
 
     cc::Build::new()
         .cpp(true)
