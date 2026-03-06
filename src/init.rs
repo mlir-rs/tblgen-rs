@@ -311,11 +311,14 @@ impl<'a> BitInit<'a> {
     }
 }
 
-impl<'a> From<BitInit<'a>> for bool {
-    fn from(value: BitInit<'a>) -> Self {
-        value
-            .as_literal()
-            .expect("BitInit is a variable reference (VarBitInit), not a literal; use as_literal() or as_var_bit() instead")
+impl<'a> TryFrom<BitInit<'a>> for bool {
+    type Error = TableGenError;
+
+    fn try_from(value: BitInit<'a>) -> Result<Self, Self::Error> {
+        value.as_literal().ok_or(TableGenError::InitConversion {
+            from: "VarBitInit",
+            to: "bool",
+        })
     }
 }
 
@@ -329,10 +332,20 @@ impl<'a> From<BitsInit<'a>> for Vec<BitInit<'a>> {
     }
 }
 
-impl<'a> From<BitsInit<'a>> for Vec<bool> {
-    fn from(value: BitsInit<'a>) -> Self {
+impl<'a> TryFrom<BitsInit<'a>> for Vec<bool> {
+    type Error = TableGenError;
+
+    fn try_from(value: BitsInit<'a>) -> Result<Self, Self::Error> {
         (0..value.num_bits())
-            .map(|i| value.bit(i).expect("index within range").into())
+            .map(|i| {
+                value
+                    .bit(i)
+                    .ok_or(TableGenError::InitConversion {
+                        from: "BitsInit",
+                        to: "bool",
+                    })
+                    .and_then(bool::try_from)
+            })
             .collect()
     }
 }
@@ -366,12 +379,20 @@ impl<'a> BitsInit<'a> {
 
 init!(IntInit);
 
-impl<'a> From<IntInit<'a>> for i64 {
-    fn from(value: IntInit<'a>) -> Self {
+impl<'a> TryFrom<IntInit<'a>> for i64 {
+    type Error = TableGenError;
+
+    fn try_from(value: IntInit<'a>) -> Result<Self, Self::Error> {
         let mut int: i64 = 0;
         let res = unsafe { tableGenIntInitGetValue(value.raw, &mut int) };
-        assert!(res > 0);
-        int
+        if res > 0 {
+            Ok(int)
+        } else {
+            Err(TableGenError::InitConversion {
+                from: "Int",
+                to: "i64",
+            })
+        }
     }
 }
 
@@ -746,6 +767,50 @@ mod tests {
         }
         let optional: Vec<Option<bool>> = bits.into();
         assert_eq!(optional, vec![None, None, None, None]);
+    }
+
+    #[test]
+    fn vec_bool_from_varbit_bits_returns_err() {
+        // Variable-reference bits (VarBitInit) cannot be converted to bool.
+        // The TryFrom impl must return Err rather than panicking.
+        let rk = TableGenParser::new()
+            .add_source("class Foo<bits<4> src> { bits<4> val = src; }")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let bits: BitsInit = rk
+            .class("Foo")
+            .expect("class Foo exists")
+            .value("val")
+            .expect("field val exists")
+            .init
+            .as_bits()
+            .expect("is BitsInit");
+        let result = Vec::<bool>::try_from(bits);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn empty_list() {
+        let rk = TableGenParser::new()
+            .add_source("def A { list<int> l = []; }")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let l: ListInit = rk
+            .def("A")
+            .expect("def A exists")
+            .value("l")
+            .expect("field l exists")
+            .try_into()
+            .expect("is list init");
+        assert_eq!(l.len(), 0);
+        assert!(l.is_empty());
+        assert!(l.iter().next().is_none());
+        // Repeated next() calls on exhausted iterator must not misbehave.
+        let mut iter = l.iter();
+        assert!(iter.next().is_none());
+        assert!(iter.next().is_none());
     }
 
     #[test]

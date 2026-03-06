@@ -78,6 +78,7 @@ tableGenRecordKeeperGetAllDerivedDefinitions(TableGenRecordKeeperRef rk_ref,
 
 TableGenRecordRef tableGenRecordVectorGet(TableGenRecordVectorRef vec_ref,
                                           size_t index);
+size_t tableGenRecordVectorSize(TableGenRecordVectorRef vec_ref);
 void tableGenRecordVectorFree(TableGenRecordVectorRef vec_ref);
 
 TableGenRecordKeeperIteratorRef
