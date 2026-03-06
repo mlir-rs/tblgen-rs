@@ -337,6 +337,14 @@ impl<'a> From<BitsInit<'a>> for Vec<bool> {
     }
 }
 
+impl<'a> From<BitsInit<'a>> for Vec<Option<bool>> {
+    fn from(value: BitsInit<'a>) -> Self {
+        (0..value.num_bits())
+            .map(|i| value.bit(i).expect("index within range").as_literal())
+            .collect()
+    }
+}
+
 impl<'a> BitsInit<'a> {
     /// Returns the bit at the given index.
     pub fn bit(self, index: usize) -> Option<BitInit<'a>> {
@@ -664,6 +672,8 @@ mod tests {
             assert_eq!(bit.as_var_bit(), Some(("Foo:src", i)));
             assert_eq!(bit.as_literal(), None);
         }
+        let optional: Vec<Option<bool>> = bits.into();
+        assert_eq!(optional, vec![None, None, None, None]);
     }
 
     #[test]
