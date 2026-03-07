@@ -11,6 +11,7 @@
 #include "TableGen.hpp"
 #include "Types.h"
 
+using namespace llvm;
 using ctablegen::RecordMap;
 
 void tableGenRecordKeeperFree(TableGenRecordKeeperRef rk_ref) {

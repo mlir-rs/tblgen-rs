@@ -13,6 +13,8 @@
 #include "Types.h"
 #include "llvm/Support/SourceMgr.h"
 
+using namespace llvm;
+
 namespace ctablegen {
 
 TableGenRecTyKind tableGenFromRecType(const RecTy *rt) {

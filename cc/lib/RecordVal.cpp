@@ -12,6 +12,8 @@
 #include "TableGen.hpp"
 #include "Types.h"
 
+using namespace llvm;
+
 TableGenStringRef tableGenRecordValGetName(TableGenRecordValRef rv_ref) {
   auto s = unwrap(rv_ref)->getName();
   return TableGenStringRef{.data = s.data(), .len = s.size()};

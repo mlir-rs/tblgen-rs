@@ -11,6 +11,7 @@
 #include "TableGen.hpp"
 #include "Types.h"
 
+using namespace llvm;
 using ctablegen::tableGenFromRecType;
 
 TableGenRecordKeeperRef tableGenRecordGetRecords(TableGenRecordRef record_ref) {
