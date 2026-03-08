@@ -42,12 +42,6 @@ TableGenBool tableGenRecordValGetValAsBit(TableGenRecordValRef rv_ref,
       wrap(dyn_cast<TypedInit>(unwrap(rv_ref)->getValue())), bit);
 }
 
-int8_t *tableGenRecordValGetValAsBits(TableGenRecordValRef rv_ref,
-                                      size_t *len) {
-  return tableGenBitsInitGetValue(
-      wrap(dyn_cast<TypedInit>(unwrap(rv_ref)->getValue())), len);
-}
-
 TableGenBool tableGenRecordValGetValAsInt(TableGenRecordValRef rv_ref,
                                           int64_t *integer) {
   return tableGenIntInitGetValue(

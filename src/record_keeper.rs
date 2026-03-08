@@ -24,12 +24,13 @@ use crate::{
     raw::{
         TableGenRecordKeeperIteratorRef, TableGenRecordKeeperRef, TableGenRecordVectorRef,
         tableGenRecordKeeperFree, tableGenRecordKeeperGetAllDerivedDefinitions,
-        tableGenRecordKeeperGetClass, tableGenRecordKeeperGetDef,
-        tableGenRecordKeeperGetFirstClass, tableGenRecordKeeperGetFirstDef,
-        tableGenRecordKeeperGetNextClass, tableGenRecordKeeperGetNextDef,
-        tableGenRecordKeeperItemGetName, tableGenRecordKeeperItemGetRecord,
-        tableGenRecordKeeperIteratorClone, tableGenRecordKeeperIteratorFree,
-        tableGenRecordVectorFree, tableGenRecordVectorGet, tableGenRecordVectorSize,
+        tableGenRecordKeeperGetAllDerivedDefinitionsIfDefined, tableGenRecordKeeperGetClass,
+        tableGenRecordKeeperGetDef, tableGenRecordKeeperGetFirstClass,
+        tableGenRecordKeeperGetFirstDef, tableGenRecordKeeperGetNextClass,
+        tableGenRecordKeeperGetNextDef, tableGenRecordKeeperItemGetName,
+        tableGenRecordKeeperItemGetRecord, tableGenRecordKeeperIteratorClone,
+        tableGenRecordKeeperIteratorFree, tableGenRecordVectorFree, tableGenRecordVectorGet,
+        tableGenRecordVectorSize,
     },
     record::Record,
     string_ref::StringRef,
@@ -93,6 +94,17 @@ impl<'s> RecordKeeper<'s> {
     pub fn all_derived_definitions(&self, name: &str) -> RecordIter<'_> {
         unsafe {
             RecordIter::from_raw_vector(tableGenRecordKeeperGetAllDerivedDefinitions(
+                self.raw,
+                StringRef::from(name).to_raw(),
+            ))
+        }
+    }
+
+    /// Returns an iterator over all definitions that derive from the class with
+    /// the given name. Returns an empty iterator if the class is not defined.
+    pub fn all_derived_definitions_if_defined(&self, name: &str) -> RecordIter<'_> {
+        unsafe {
+            RecordIter::from_raw_vector(tableGenRecordKeeperGetAllDerivedDefinitionsIfDefined(
                 self.raw,
                 StringRef::from(name).to_raw(),
             ))
@@ -390,6 +402,61 @@ mod test {
     fn add_source_interior_null() {
         let result = TableGenParser::new().add_source("def A;\0invalid");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn derived_defs_if_defined_empty_results() {
+        let rk = TableGenParser::new()
+            .add_source("class A; class B; def D1: A;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        // B exists but nothing derives from it
+        let b = rk.all_derived_definitions_if_defined("B");
+        assert_eq!(b.count(), 0);
+    }
+
+    #[test]
+    fn named_iter_clone_mid_iteration() {
+        let rk = TableGenParser::new()
+            .add_source("class A; class B; class C;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let mut iter = rk.classes();
+        assert_eq!(iter.next().unwrap().0, Ok("A"));
+        // Clone mid-iteration; both should continue independently
+        let mut cloned = iter.clone();
+        assert_eq!(iter.next().unwrap().0, Ok("B"));
+        assert_eq!(cloned.next().unwrap().0, Ok("B"));
+        assert_eq!(iter.next().unwrap().0, Ok("C"));
+        assert_eq!(cloned.next().unwrap().0, Ok("C"));
+        assert!(iter.next().is_none());
+        assert!(cloned.next().is_none());
+    }
+
+    #[test]
+    fn derived_defs_if_defined() {
+        let rk = TableGenParser::new()
+            .add_source(
+                r#"
+                class A;
+                def D1: A;
+                def D2: A;
+                "#,
+            )
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        // Existing class
+        let a = rk.all_derived_definitions_if_defined("A");
+        assert_eq!(
+            a.map(|r| r.name().unwrap().to_string()).collect::<Vec<_>>(),
+            vec!["D1", "D2"]
+        );
+        // Non-existing class returns empty
+        let b = rk.all_derived_definitions_if_defined("NonExistent");
+        assert_eq!(b.count(), 0);
     }
 
     #[test]

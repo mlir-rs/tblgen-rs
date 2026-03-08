@@ -14,10 +14,11 @@ use std::{ffi::c_void, marker::PhantomData};
 use crate::raw::{
     TableGenRecordRef, TableGenRecordValRef, tableGenRecordDump, tableGenRecordGetFieldType,
     tableGenRecordGetFirstValue, tableGenRecordGetLoc, tableGenRecordGetName,
-    tableGenRecordGetValue, tableGenRecordIsAnonymous, tableGenRecordIsSubclassOf,
-    tableGenRecordPrint, tableGenRecordValDump, tableGenRecordValGetLoc,
-    tableGenRecordValGetNameInit, tableGenRecordValGetValue, tableGenRecordValNext,
-    tableGenRecordValPrint,
+    tableGenRecordGetNumSuperClasses, tableGenRecordGetNumTemplateArgs,
+    tableGenRecordGetSuperClass, tableGenRecordGetTemplateArgName, tableGenRecordGetValue,
+    tableGenRecordIsAnonymous, tableGenRecordIsSubclassOf, tableGenRecordPrint,
+    tableGenRecordValDump, tableGenRecordValGetLoc, tableGenRecordValGetNameInit,
+    tableGenRecordValGetValue, tableGenRecordValNext, tableGenRecordValPrint,
 };
 
 use crate::{
@@ -220,6 +221,52 @@ impl<'a> Record<'a> {
     pub fn dump(self) {
         unsafe { tableGenRecordDump(self.raw) }
     }
+
+    /// Returns the number of template arguments.
+    pub fn num_template_args(self) -> usize {
+        unsafe { tableGenRecordGetNumTemplateArgs(self.raw) }
+    }
+
+    /// Returns the template argument name at the given index.
+    pub fn template_arg_name(self, index: usize) -> Option<&'a str> {
+        unsafe { StringRef::from_option_raw(tableGenRecordGetTemplateArgName(self.raw, index)) }
+            .and_then(|s| s.try_into().ok())
+    }
+
+    /// Returns an iterator over the template argument names.
+    pub fn template_args(self) -> TemplateArgIter<'a> {
+        let back = self.num_template_args();
+        TemplateArgIter {
+            record: self,
+            index: 0,
+            back,
+        }
+    }
+
+    /// Returns the number of direct super classes.
+    pub fn num_super_classes(self) -> usize {
+        unsafe { tableGenRecordGetNumSuperClasses(self.raw) }
+    }
+
+    /// Returns the super class at the given index.
+    pub fn super_class(self, index: usize) -> Option<Record<'a>> {
+        let ptr = unsafe { tableGenRecordGetSuperClass(self.raw, index) };
+        if ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { Record::from_raw(ptr) })
+        }
+    }
+
+    /// Returns an iterator over the direct super classes.
+    pub fn direct_super_classes(self) -> SuperClassIter<'a> {
+        let back = self.num_super_classes();
+        SuperClassIter {
+            record: self,
+            index: 0,
+            back,
+        }
+    }
 }
 
 impl SourceLoc for Record<'_> {
@@ -352,6 +399,98 @@ impl<'a> Iterator for RecordValueIter<'a> {
 }
 
 impl std::iter::FusedIterator for RecordValueIter<'_> {}
+
+/// Iterator over the template argument names of a [`Record`].
+#[derive(Debug, Clone)]
+pub struct TemplateArgIter<'a> {
+    record: Record<'a>,
+    index: usize,
+    back: usize,
+}
+
+impl<'a> Iterator for TemplateArgIter<'a> {
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.back {
+            return None;
+        }
+        let name = self.record.template_arg_name(self.index);
+        self.index += 1;
+        name
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.back.saturating_sub(self.index);
+        (remaining, Some(remaining))
+    }
+}
+
+impl<'a> DoubleEndedIterator for TemplateArgIter<'a> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index >= self.back {
+            return None;
+        }
+        self.back -= 1;
+        match self.record.template_arg_name(self.back) {
+            Some(name) => Some(name),
+            None => {
+                self.back += 1;
+                None
+            }
+        }
+    }
+}
+
+impl ExactSizeIterator for TemplateArgIter<'_> {}
+
+impl std::iter::FusedIterator for TemplateArgIter<'_> {}
+
+/// Iterator over the direct super classes of a [`Record`].
+#[derive(Debug, Clone)]
+pub struct SuperClassIter<'a> {
+    record: Record<'a>,
+    index: usize,
+    back: usize,
+}
+
+impl<'a> Iterator for SuperClassIter<'a> {
+    type Item = Record<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.back {
+            return None;
+        }
+        let class = self.record.super_class(self.index);
+        self.index += 1;
+        class
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.back.saturating_sub(self.index);
+        (remaining, Some(remaining))
+    }
+}
+
+impl<'a> DoubleEndedIterator for SuperClassIter<'a> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index >= self.back {
+            return None;
+        }
+        self.back -= 1;
+        match self.record.super_class(self.back) {
+            Some(class) => Some(class),
+            None => {
+                self.back += 1;
+                None
+            }
+        }
+    }
+}
+
+impl ExactSizeIterator for SuperClassIter<'_> {}
+
+impl std::iter::FusedIterator for SuperClassIter<'_> {}
 
 #[cfg(test)]
 mod tests {
@@ -547,5 +686,162 @@ mod tests {
         assert_eq!(a.field_type("s"), Some(TableGenStringRecTyKind));
         assert_eq!(a.field_type("b"), Some(TableGenBitRecTyKind));
         assert_eq!(a.field_type("nonexistent"), None);
+    }
+
+    #[test]
+    fn template_args() {
+        let rk = TableGenParser::new()
+            .add_source("class Foo<int x, string y>;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let foo = rk.class("Foo").expect("class Foo exists");
+        assert_eq!(foo.num_template_args(), 2);
+        assert_eq!(foo.template_arg_name(0), Some("Foo:x"));
+        assert_eq!(foo.template_arg_name(1), Some("Foo:y"));
+        assert_eq!(foo.template_arg_name(2), None);
+        let names: Vec<_> = foo.template_args().collect();
+        assert_eq!(names, vec!["Foo:x", "Foo:y"]);
+        // Double-ended
+        let mut iter = foo.template_args();
+        assert_eq!(iter.next_back(), Some("Foo:y"));
+        assert_eq!(iter.next(), Some("Foo:x"));
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn template_args_on_def() {
+        let rk = TableGenParser::new()
+            .add_source("class A; def D: A;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let d = rk.def("D").expect("def D exists");
+        assert_eq!(d.num_template_args(), 0);
+        assert_eq!(d.template_arg_name(0), None);
+        assert_eq!(d.template_args().count(), 0);
+    }
+
+    #[test]
+    fn template_args_no_params() {
+        let rk = TableGenParser::new()
+            .add_source("class Foo;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let foo = rk.class("Foo").expect("class Foo exists");
+        assert_eq!(foo.num_template_args(), 0);
+        assert_eq!(foo.template_args().count(), 0);
+        let mut iter = foo.template_args();
+        assert!(iter.next().is_none());
+        assert!(iter.next_back().is_none());
+    }
+
+    #[test]
+    fn template_args_len_tracks() {
+        let rk = TableGenParser::new()
+            .add_source("class Foo<int a, int b, int c>;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let foo = rk.class("Foo").expect("class Foo exists");
+        let mut iter = foo.template_args();
+        assert_eq!(iter.len(), 3);
+        iter.next();
+        assert_eq!(iter.len(), 2);
+        iter.next_back();
+        assert_eq!(iter.len(), 1);
+        iter.next();
+        assert_eq!(iter.len(), 0);
+        assert!(iter.next().is_none());
+        assert!(iter.next_back().is_none());
+    }
+
+    #[test]
+    fn super_classes() {
+        let rk = TableGenParser::new()
+            .add_source(
+                r#"
+                class A;
+                class B;
+                class C;
+                def D: A, B, C;
+                "#,
+            )
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let d = rk.def("D").expect("def D exists");
+        assert_eq!(d.num_super_classes(), 3);
+        assert_eq!(d.super_class(0).unwrap().name().unwrap(), "A");
+        assert_eq!(d.super_class(1).unwrap().name().unwrap(), "B");
+        assert_eq!(d.super_class(2).unwrap().name().unwrap(), "C");
+        assert!(d.super_class(3).is_none());
+        let names: Vec<_> = d
+            .direct_super_classes()
+            .map(|r| r.name().unwrap().to_string())
+            .collect();
+        assert_eq!(names, vec!["A", "B", "C"]);
+        // Double-ended
+        let mut iter = d.direct_super_classes();
+        assert_eq!(iter.next_back().unwrap().name().unwrap(), "C");
+        assert_eq!(iter.next().unwrap().name().unwrap(), "A");
+        assert_eq!(iter.next().unwrap().name().unwrap(), "B");
+        assert!(iter.next().is_none());
+    }
+
+    #[test]
+    fn super_classes_on_class() {
+        let rk = TableGenParser::new()
+            .add_source("class A; class B: A; class C: A, B;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let b = rk.class("B").expect("class B exists");
+        assert_eq!(b.num_super_classes(), 1);
+        assert_eq!(b.super_class(0).unwrap().name().unwrap(), "A");
+        let c = rk.class("C").expect("class C exists");
+        assert_eq!(c.num_super_classes(), 2);
+        let names: Vec<_> = c
+            .direct_super_classes()
+            .map(|r| r.name().unwrap().to_string())
+            .collect();
+        assert_eq!(names, vec!["A", "B"]);
+    }
+
+    #[test]
+    fn super_classes_empty() {
+        let rk = TableGenParser::new()
+            .add_source("def D;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let d = rk.def("D").expect("def D exists");
+        assert_eq!(d.num_super_classes(), 0);
+        assert!(d.super_class(0).is_none());
+        assert_eq!(d.direct_super_classes().count(), 0);
+        let mut iter = d.direct_super_classes();
+        assert!(iter.next().is_none());
+        assert!(iter.next_back().is_none());
+    }
+
+    #[test]
+    fn super_classes_len_tracks() {
+        let rk = TableGenParser::new()
+            .add_source("class A; class B; class C; def D: A, B, C;")
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let d = rk.def("D").expect("def D exists");
+        let mut iter = d.direct_super_classes();
+        assert_eq!(iter.len(), 3);
+        iter.next();
+        assert_eq!(iter.len(), 2);
+        iter.next_back();
+        assert_eq!(iter.len(), 1);
+        iter.next();
+        assert_eq!(iter.len(), 0);
+        assert!(iter.next().is_none());
+        assert!(iter.next_back().is_none());
     }
 }

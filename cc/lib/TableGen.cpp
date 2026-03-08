@@ -113,6 +113,18 @@ TableGenTypedInitRef tableGenListRecordGet(TableGenTypedInitRef rv_ref,
   return wrap(elem);
 }
 
+TableGenRecTyKind tableGenListInitGetElementType(TableGenTypedInitRef ti) {
+  if (!ti)
+    return TableGenInvalidRecTyKind;
+  auto list = dyn_cast<ListInit>(unwrap(ti));
+  if (!list)
+    return TableGenInvalidRecTyKind;
+  auto *listTy = dyn_cast<ListRecTy>(list->getType());
+  if (!listTy)
+    return TableGenInvalidRecTyKind;
+  return tableGenFromRecType(listTy->getElementType());
+}
+
 // LLVM DagType
 TableGenTypedInitRef tableGenDagRecordGet(TableGenTypedInitRef rv_ref,
                                           size_t index) {
@@ -153,8 +165,6 @@ TableGenStringRef tableGenDagRecordArgName(TableGenTypedInitRef rv_ref,
 }
 
 // Memory
-void tableGenBitArrayFree(int8_t bit_array[]) { delete[] bit_array; }
-
 void tableGenStringFree(const char *str) { delete str; }
 
 void tableGenStringArrayFree(const char **str_array) { delete str_array; }

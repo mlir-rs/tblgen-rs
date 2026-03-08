@@ -21,8 +21,9 @@ use crate::{
         tableGenBitsInitGetBitInit, tableGenBitsInitGetNumBits, tableGenDagRecordArgName,
         tableGenDagRecordGet, tableGenDagRecordNumArgs, tableGenDagRecordOperator,
         tableGenDefInitGetValue, tableGenInitDump, tableGenInitPrint, tableGenInitRecType,
-        tableGenIntInitGetValue, tableGenListRecordGet, tableGenListRecordNumElements,
-        tableGenStringInitGetValue, tableGenVarBitInitGetBitNum, tableGenVarBitInitGetVarName,
+        tableGenIntInitGetValue, tableGenListInitGetElementType, tableGenListRecordGet,
+        tableGenListRecordNumElements, tableGenStringInitGetValue, tableGenVarBitInitGetBitNum,
+        tableGenVarBitInitGetVarName,
     },
     string_ref::StringRef,
     util::print_callback,
@@ -596,6 +597,17 @@ impl<'a> ListInit<'a> {
             None
         }
     }
+
+    /// Returns the element type of this list, or `None` if it cannot be determined.
+    pub fn element_type(self) -> Option<crate::raw::TableGenRecTyKind::Type> {
+        use crate::raw::TableGenRecTyKind::TableGenInvalidRecTyKind;
+        let kind = unsafe { tableGenListInitGetElementType(self.raw) };
+        if kind == TableGenInvalidRecTyKind {
+            None
+        } else {
+            Some(kind)
+        }
+    }
 }
 
 /// Iterator over the elements of a [`ListInit`].
@@ -977,5 +989,33 @@ mod tests {
             assert!(bit.as_var_bit().is_none());
             assert!(bit.as_literal().is_some());
         }
+    }
+
+    #[test]
+    fn list_element_type() {
+        use crate::raw::TableGenRecTyKind::{
+            TableGenDagRecTyKind, TableGenIntRecTyKind, TableGenStringRecTyKind,
+        };
+        let rk = TableGenParser::new()
+            .add_source(
+                r#"
+                def op;
+                def A {
+                    list<int> li = [1, 2, 3];
+                    list<string> ls = ["a", "b"];
+                    list<dag> ld = [(op)];
+                }
+                "#,
+            )
+            .unwrap()
+            .parse()
+            .expect("valid tablegen");
+        let a = rk.def("A").expect("def A exists");
+        let li: ListInit = a.value("li").unwrap().try_into().unwrap();
+        assert_eq!(li.element_type(), Some(TableGenIntRecTyKind));
+        let ls: ListInit = a.value("ls").unwrap().try_into().unwrap();
+        assert_eq!(ls.element_type(), Some(TableGenStringRecTyKind));
+        let ld: ListInit = a.value("ld").unwrap().try_into().unwrap();
+        assert_eq!(ld.element_type(), Some(TableGenDagRecTyKind));
     }
 }

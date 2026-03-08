@@ -59,24 +59,6 @@ TableGenBool tableGenBitInitGetValue(TableGenTypedInitRef ti, int8_t *bit) {
   return true;
 }
 
-int8_t *tableGenBitsInitGetValue(TableGenTypedInitRef ti, size_t *len) {
-  if (!ti)
-    return nullptr;
-  auto bits_init = dyn_cast<BitsInit>(unwrap(ti));
-  if (!bits_init)
-    return nullptr;
-
-  *len = bits_init->getNumBits();
-  auto bits = new int8_t[*len];
-
-  for (size_t i = 0; i < *len; i++) {
-    bits[i] =
-        reinterpret_cast<const BitInit *>(bits_init->getBit(i))->getValue();
-  }
-
-  return bits;
-}
-
 TableGenBool tableGenBitsInitGetNumBits(TableGenTypedInitRef ti, size_t *len) {
   if (!ti)
     return false;
