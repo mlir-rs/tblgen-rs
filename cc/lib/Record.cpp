@@ -10,6 +10,7 @@
 
 #include "TableGen.hpp"
 #include "Types.h"
+#include <llvm/Config/llvm-config.h>
 
 using namespace llvm;
 using ctablegen::tableGenFromRecType;
@@ -74,4 +75,40 @@ void tableGenRecordPrint(TableGenRecordRef record_ref,
 
 void tableGenRecordDump(TableGenRecordRef record_ref) {
   unwrap(record_ref)->dump();
+}
+
+size_t tableGenRecordGetNumTemplateArgs(TableGenRecordRef record_ref) {
+  return unwrap(record_ref)->getTemplateArgs().size();
+}
+
+TableGenStringRef tableGenRecordGetTemplateArgName(TableGenRecordRef record_ref,
+                                                   size_t index) {
+  auto args = unwrap(record_ref)->getTemplateArgs();
+  if (index >= args.size())
+    return TableGenStringRef{.data = nullptr, .len = 0};
+  auto name = dyn_cast<StringInit>(args[index]);
+  if (!name)
+    return TableGenStringRef{.data = nullptr, .len = 0};
+  auto val = name->getValue();
+  return TableGenStringRef{.data = val.data(), .len = val.size()};
+}
+
+size_t tableGenRecordGetNumSuperClasses(TableGenRecordRef record_ref) {
+#if LLVM_VERSION_MAJOR >= 21
+  return unwrap(record_ref)->getDirectSuperClasses().size();
+#else
+  return unwrap(record_ref)->getSuperClasses().size();
+#endif
+}
+
+TableGenRecordRef tableGenRecordGetSuperClass(TableGenRecordRef record_ref,
+                                              size_t index) {
+#if LLVM_VERSION_MAJOR >= 21
+  auto supers = unwrap(record_ref)->getDirectSuperClasses();
+#else
+  auto supers = unwrap(record_ref)->getSuperClasses();
+#endif
+  if (index >= supers.size())
+    return nullptr;
+  return wrap(supers[index].first);
 }

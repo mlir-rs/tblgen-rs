@@ -74,6 +74,11 @@ private:
   uint64_t pos;
 };
 
+struct RecordMapIterator {
+  RecordMap::const_iterator it;
+  RecordMap::const_iterator end;
+};
+
 } // namespace ctablegen
 
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::TableGenParser,
@@ -94,7 +99,7 @@ DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::RecordVal, TableGenRecordValRef);
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::TypedInit, TableGenTypedInitRef);
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::DagPair, TableGenDagPairRef);
 
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::RecordMap::const_iterator,
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::RecordMapIterator,
                                    TableGenRecordKeeperIteratorRef);
 
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::ArrayRef<llvm::SMLoc>,

@@ -75,6 +75,8 @@ TableGenRecordRef tableGenRecordKeeperGetDef(TableGenRecordKeeperRef rk_ref,
 TableGenRecordVectorRef
 tableGenRecordKeeperGetAllDerivedDefinitions(TableGenRecordKeeperRef rk_ref,
                                              TableGenStringRef className);
+TableGenRecordVectorRef tableGenRecordKeeperGetAllDerivedDefinitionsIfDefined(
+    TableGenRecordKeeperRef rk_ref, TableGenStringRef className);
 
 TableGenRecordRef tableGenRecordVectorGet(TableGenRecordVectorRef vec_ref,
                                           size_t index);
@@ -112,6 +114,12 @@ void tableGenRecordPrint(TableGenRecordRef record_ref,
                          TableGenStringCallback callback, void *userData);
 void tableGenRecordDump(TableGenRecordRef record_ref);
 TableGenSourceLocationRef tableGenRecordGetLoc(TableGenRecordRef record_ref);
+size_t tableGenRecordGetNumTemplateArgs(TableGenRecordRef record_ref);
+TableGenStringRef tableGenRecordGetTemplateArgName(TableGenRecordRef record_ref,
+                                                   size_t index);
+size_t tableGenRecordGetNumSuperClasses(TableGenRecordRef record_ref);
+TableGenRecordRef tableGenRecordGetSuperClass(TableGenRecordRef record_ref,
+                                              size_t index);
 
 // LLVM RecordVal
 TableGenStringRef tableGenRecordValGetName(TableGenRecordValRef rv_ref);
@@ -130,10 +138,8 @@ TableGenSourceLocationRef tableGenRecordValGetLoc(TableGenRecordValRef rv_ref);
 char *tableGenRecordValGetValAsNewString(TableGenRecordValRef rv_ref);
 TableGenBool tableGenRecordValGetValAsBit(TableGenRecordValRef rv_ref,
                                           int8_t *bit);
-int8_t *tableGenRecordValGetValAsBits(TableGenRecordValRef rv_ref, size_t *len);
 TableGenBool tableGenRecordValGetValAsInt(TableGenRecordValRef rv_ref,
                                           int64_t *integer);
-TableGenRecordRef tableGenRecordValGetValAsRecord(TableGenRecordValRef rv_ref);
 TableGenRecordRef
 tableGenRecordValGetValAsDefRecord(TableGenRecordValRef rv_ref);
 
@@ -142,6 +148,7 @@ TableGenRecTyKind tableGenListRecordGetType(TableGenRecordValRef rv_ref);
 TableGenTypedInitRef tableGenListRecordGet(TableGenTypedInitRef rv_ref,
                                            size_t index);
 size_t tableGenListRecordNumElements(TableGenTypedInitRef rv_ref);
+TableGenRecTyKind tableGenListInitGetElementType(TableGenTypedInitRef ti);
 
 // LLVM DagType
 TableGenRecordRef tableGenDagRecordOperator(TableGenTypedInitRef rv_ref);
@@ -154,7 +161,6 @@ size_t tableGenDagRecordNumArgs(TableGenTypedInitRef rv_ref);
 // Utility
 TableGenRecTyKind tableGenInitRecType(TableGenTypedInitRef ti);
 TableGenBool tableGenBitInitGetValue(TableGenTypedInitRef ti, int8_t *bit);
-int8_t *tableGenBitsInitGetValue(TableGenTypedInitRef ti, size_t *len);
 TableGenBool tableGenBitsInitGetNumBits(TableGenTypedInitRef ti, size_t *len);
 TableGenTypedInitRef tableGenBitsInitGetBitInit(TableGenTypedInitRef ti,
                                                 size_t index);
@@ -181,7 +187,6 @@ size_t tableGenVarBitInitGetBitNum(TableGenTypedInitRef ti);
 
 // Memory
 void tableGenSourceLocationFree(TableGenSourceLocationRef loc_ref);
-void tableGenBitArrayFree(int8_t bit_array[]);
 void tableGenStringFree(const char *str);
 void tableGenStringArrayFree(const char **str_array);
 
