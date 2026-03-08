@@ -21,4 +21,4 @@ jobs:
         with:
           path: target/doc
       - uses: actions/deploy-pages@v4
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
