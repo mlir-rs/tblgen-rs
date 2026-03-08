@@ -13,6 +13,7 @@
 #include "Types.h"
 #include <cstring>
 
+using namespace llvm;
 using ctablegen::RecordMap;
 using ctablegen::tableGenFromRecType;
 

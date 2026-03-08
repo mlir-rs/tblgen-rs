@@ -26,23 +26,22 @@
 #include "Types.h"
 #include "llvm/Support/CBindingWrapping.h"
 
-using namespace llvm;
-
 namespace ctablegen {
 
-typedef std::map<std::string, std::unique_ptr<Record>, std::less<>> RecordMap;
-typedef std::vector<const Record *> RecordVector;
-typedef std::pair<std::string, TypedInit *> DagPair;
+typedef std::map<std::string, std::unique_ptr<llvm::Record>, std::less<>>
+    RecordMap;
+typedef std::vector<const llvm::Record *> RecordVector;
+typedef std::pair<std::string, llvm::TypedInit *> DagPair;
 
 class TableGenParser {
 public:
   TableGenParser() {}
   bool addSource(const char *source);
-  void addSourceFile(const StringRef source);
-  void addIncludeDirectory(const StringRef include);
-  RecordKeeper *parse();
+  void addSourceFile(const llvm::StringRef source);
+  void addIncludeDirectory(const llvm::StringRef include);
+  llvm::RecordKeeper *parse();
 
-  SourceMgr sourceMgr;
+  llvm::SourceMgr sourceMgr;
 
 private:
   std::vector<std::string> includeDirs;
@@ -50,7 +49,7 @@ private:
 };
 
 // Utility
-TableGenRecTyKind tableGenFromRecType(const RecTy *rt);
+TableGenRecTyKind tableGenFromRecType(const llvm::RecTy *rt);
 
 /// A simple raw ostream subclass that forwards write_impl calls to the
 /// user-supplied callback together with opaque user-supplied data.
@@ -79,24 +78,26 @@ private:
 
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::TableGenParser,
                                    TableGenParserRef);
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(RecordKeeper, TableGenRecordKeeperRef);
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::RecordKeeper, TableGenRecordKeeperRef);
 
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::RecordMap, TableGenRecordMapRef);
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::RecordVector,
                                    TableGenRecordVectorRef);
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ArrayRef<Record>, TableGenRecordArrayRef);
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ArrayRef<RecordVal>,
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::ArrayRef<llvm::Record>,
+                                   TableGenRecordArrayRef);
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::ArrayRef<llvm::RecordVal>,
                                    TableGenRecordValArrayRef);
 
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(Record, TableGenRecordRef);
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(RecordVal, TableGenRecordValRef);
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::Record, TableGenRecordRef);
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::RecordVal, TableGenRecordValRef);
 
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(TypedInit, TableGenTypedInitRef);
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::TypedInit, TableGenTypedInitRef);
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::DagPair, TableGenDagPairRef);
 
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::RecordMap::const_iterator,
                                    TableGenRecordKeeperIteratorRef);
 
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ArrayRef<SMLoc>, TableGenSourceLocationRef);
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::ArrayRef<llvm::SMLoc>,
+                                   TableGenSourceLocationRef);
 
 #endif
