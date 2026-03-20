@@ -65,7 +65,8 @@ void tableGenRecordValDump(TableGenRecordValRef rv_ref) {
 }
 
 TableGenSourceLocationRef tableGenRecordValGetLoc(TableGenRecordValRef rv_ref) {
-  return wrap(new ArrayRef(unwrap(rv_ref)->getLoc()));
+  auto loc = unwrap(rv_ref)->getLoc();
+  return wrap(new std::vector<SMLoc>(1, loc));
 }
 
 size_t tableGenRecordValGetBitsWidth(TableGenRecordValRef rv_ref) {

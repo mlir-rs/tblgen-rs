@@ -102,7 +102,7 @@ DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::DagPair, TableGenDagPairRef);
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ctablegen::RecordMapIterator,
                                    TableGenRecordKeeperIteratorRef);
 
-DEFINE_SIMPLE_CONVERSION_FUNCTIONS(llvm::ArrayRef<llvm::SMLoc>,
+DEFINE_SIMPLE_CONVERSION_FUNCTIONS(std::vector<llvm::SMLoc>,
                                    TableGenSourceLocationRef);
 
 #endif
