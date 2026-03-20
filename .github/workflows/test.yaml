@@ -26,11 +26,18 @@ jobs:
           - ubuntu-latest
           # TODO Enable macOS.
           # - macos-latest
+        llvm:
+          - version: "22"
+            feature: llvm22-0
+          - version: "21"
+            feature: llvm21-0
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: cargo test
+        with:
+          llvm-version: ${{ matrix.llvm.version }}
+      - run: cargo test --no-default-features --features ${{ matrix.llvm.feature }}
   lint:
     runs-on: ubuntu-latest
     steps:

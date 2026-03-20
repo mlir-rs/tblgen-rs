@@ -14,19 +14,22 @@ use std::{fmt, marker::PhantomData};
     feature = "llvm18-0",
     feature = "llvm19-0",
     feature = "llvm20-0",
-    feature = "llvm21-0"
+    feature = "llvm21-0",
+    feature = "llvm22-0"
 ))]
 use crate::error::TableGenError;
 #[cfg(any(feature = "llvm16-0", feature = "llvm17-0"))]
 use crate::error::{SourceLocation, TableGenError, WithLocation};
 use crate::{
     Error, SourceInfo, TableGenParser,
+    init::TypedInit,
     raw::{
         TableGenRecordKeeperIteratorRef, TableGenRecordKeeperRef, TableGenRecordVectorRef,
         tableGenRecordKeeperFree, tableGenRecordKeeperGetAllDerivedDefinitions,
         tableGenRecordKeeperGetAllDerivedDefinitionsIfDefined, tableGenRecordKeeperGetClass,
         tableGenRecordKeeperGetDef, tableGenRecordKeeperGetFirstClass,
-        tableGenRecordKeeperGetFirstDef, tableGenRecordKeeperGetNextClass,
+        tableGenRecordKeeperGetFirstDef, tableGenRecordKeeperGetGlobal,
+        tableGenRecordKeeperGetInputFilename, tableGenRecordKeeperGetNextClass,
         tableGenRecordKeeperGetNextDef, tableGenRecordKeeperItemGetName,
         tableGenRecordKeeperItemGetRecord, tableGenRecordKeeperIteratorClone,
         tableGenRecordKeeperIteratorFree, tableGenRecordVectorFree, tableGenRecordVectorGet,
@@ -113,6 +116,25 @@ impl<'s> RecordKeeper<'s> {
 
     pub fn source_info(&self) -> SourceInfo<'_> {
         SourceInfo(&self.parser)
+    }
+
+    /// Returns the input filename.
+    pub fn input_filename(&self) -> Result<&str, Error> {
+        let raw = unsafe { tableGenRecordKeeperGetInputFilename(self.raw) };
+        unsafe { StringRef::from_raw(raw) }
+            .try_into()
+            .map_err(|e: std::str::Utf8Error| TableGenError::from(e).into())
+    }
+
+    /// Returns the global variable with the given name, if it exists.
+    pub fn global(&self, name: &str) -> Option<TypedInit<'_>> {
+        let ptr =
+            unsafe { tableGenRecordKeeperGetGlobal(self.raw, StringRef::from(name).to_raw()) };
+        if ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { TypedInit::from_raw(ptr) })
+        }
     }
 }
 

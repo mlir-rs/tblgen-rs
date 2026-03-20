@@ -40,7 +40,7 @@ const SOURCE: &str = r#"
 fn print_registers(keeper: &RecordKeeper) -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Registers ===");
     for reg in keeper.all_derived_definitions("Register") {
-        let name = reg.string_value("Name")?;
+        let name = reg.str_value("Name")?;
         let index = reg.int_value("Index")?;
         println!("  {:4}  index={}", name, index);
     }
@@ -50,7 +50,7 @@ fn print_registers(keeper: &RecordKeeper) -> Result<(), Box<dyn std::error::Erro
 fn print_instructions(keeper: &RecordKeeper) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Instructions ===");
     for instr in keeper.all_derived_definitions("Instruction") {
-        let mnemonic = instr.string_value("Mnemonic")?;
+        let mnemonic = instr.str_value("Mnemonic")?;
         let operands = instr.int_value("Operands")?;
         let opcode: Vec<bool> = instr.bits_value("Opcode")?;
 
@@ -65,10 +65,33 @@ fn print_instructions(keeper: &RecordKeeper) -> Result<(), Box<dyn std::error::E
             "???"
         };
 
+        // Show bits width from field metadata
+        let opcode_field = instr.value("Opcode")?;
+        let width = opcode_field.bits_width().unwrap_or(0);
+
         println!(
-            "  {:6}  opcode={}  operands={}  kind={}",
-            mnemonic, bits, operands, kind
+            "  {:6}  opcode={}  width={}  operands={}  kind={}",
+            mnemonic, bits, width, operands, kind
         );
+    }
+    Ok(())
+}
+
+fn print_class_hierarchy(keeper: &RecordKeeper) -> Result<(), Box<dyn std::error::Error>> {
+    println!("\n=== Class hierarchy ===");
+    for instr in keeper.all_derived_definitions("Instruction") {
+        let name = instr.name()?;
+        print!("  {} -> direct supers:", name);
+        for sc in instr.direct_super_classes() {
+            print!(" {}", sc.name()?);
+        }
+        print!(" | type classes:");
+        for i in 0..instr.num_type_classes() {
+            if let Some(c) = instr.type_class(i) {
+                print!(" {}", c.name()?);
+            }
+        }
+        println!();
     }
     Ok(())
 }
@@ -77,5 +100,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let keeper = TableGenParser::new().add_source(SOURCE)?.parse()?;
     print_registers(&keeper)?;
     print_instructions(&keeper)?;
+    print_class_hierarchy(&keeper)?;
     Ok(())
 }

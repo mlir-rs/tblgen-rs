@@ -84,6 +84,13 @@ TableGenTypedInitRef tableGenBitsInitGetBitInit(TableGenTypedInitRef ti,
       const_cast<TypedInit *>(dyn_cast<TypedInit>(bits_init->getBit(index))));
 }
 
+#if LLVM_VERSION_MAJOR >= 22
+uint64_t tableGenBitsInitConvertKnownBitsToInt(TableGenTypedInitRef ti) {
+  auto bits_init = dyn_cast<BitsInit>(unwrap(ti));
+  return bits_init->convertKnownBitsToInt();
+}
+#endif
+
 TableGenBool tableGenIntInitGetValue(TableGenTypedInitRef ti,
                                      int64_t *integer) {
   if (!ti)

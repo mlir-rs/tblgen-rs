@@ -112,3 +112,241 @@ TableGenRecordRef tableGenRecordGetSuperClass(TableGenRecordRef record_ref,
     return nullptr;
   return wrap(supers[index].first);
 }
+
+TableGenBool tableGenRecordGetValueAsInt(TableGenRecordRef record_ref,
+                                         TableGenStringRef name, int64_t *out) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return false;
+  auto *init = dyn_cast<IntInit>(rv->getValue());
+  if (!init)
+    return false;
+  *out = init->getValue();
+  return true;
+}
+
+TableGenStringRef tableGenRecordGetValueAsString(TableGenRecordRef record_ref,
+                                                 TableGenStringRef name) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return TableGenStringRef{.data = nullptr, .len = 0};
+  auto *init = dyn_cast<StringInit>(rv->getValue());
+  if (!init)
+    return TableGenStringRef{.data = nullptr, .len = 0};
+  auto s = init->getValue();
+  return TableGenStringRef{.data = s.data(), .len = s.size()};
+}
+
+TableGenBool tableGenRecordGetValueAsBit(TableGenRecordRef record_ref,
+                                         TableGenStringRef name, int8_t *out) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return false;
+  auto *init = dyn_cast<BitInit>(rv->getValue());
+  if (!init)
+    return false;
+  *out = init->getValue() ? 1 : 0;
+  return true;
+}
+
+TableGenRecordRef tableGenRecordGetValueAsDef(TableGenRecordRef record_ref,
+                                              TableGenStringRef name) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return nullptr;
+  auto *init = dyn_cast<DefInit>(rv->getValue());
+  if (!init)
+    return nullptr;
+  return wrap(const_cast<Record *>(init->getDef()));
+}
+
+TableGenTypedInitRef tableGenRecordGetValueAsDag(TableGenRecordRef record_ref,
+                                                 TableGenStringRef name) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return nullptr;
+  auto *init = dyn_cast<DagInit>(rv->getValue());
+  if (!init)
+    return nullptr;
+  return wrap(const_cast<TypedInit *>(static_cast<const TypedInit *>(init)));
+}
+
+TableGenTypedInitRef
+tableGenRecordGetValueAsBitsInit(TableGenRecordRef record_ref,
+                                 TableGenStringRef name) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return nullptr;
+  auto *init = dyn_cast<BitsInit>(rv->getValue());
+  if (!init)
+    return nullptr;
+  return wrap(const_cast<TypedInit *>(static_cast<const TypedInit *>(init)));
+}
+
+TableGenTypedInitRef
+tableGenRecordGetValueAsListInit(TableGenRecordRef record_ref,
+                                 TableGenStringRef name) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return nullptr;
+  auto *init = dyn_cast<ListInit>(rv->getValue());
+  if (!init)
+    return nullptr;
+  return wrap(const_cast<TypedInit *>(static_cast<const TypedInit *>(init)));
+}
+
+TableGenRecordVectorRef
+tableGenRecordGetValueAsListOfDefs(TableGenRecordRef record_ref,
+                                   TableGenStringRef name) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return nullptr;
+  auto *list = dyn_cast<ListInit>(rv->getValue());
+  if (!list)
+    return nullptr;
+  auto *vec = new ctablegen::RecordVector();
+  vec->reserve(list->size());
+  for (size_t i = 0; i < list->size(); ++i) {
+    auto *def = dyn_cast<DefInit>(list->getElement(i));
+    if (!def) {
+      delete vec;
+      return nullptr;
+    }
+    vec->push_back(const_cast<Record *>(def->getDef()));
+  }
+  return wrap(vec);
+}
+
+TableGenBool tableGenRecordGetValueAsListOfInts(TableGenRecordRef record_ref,
+                                                TableGenStringRef name,
+                                                int64_t **out,
+                                                size_t *out_len) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return false;
+  auto *list = dyn_cast<ListInit>(rv->getValue());
+  if (!list)
+    return false;
+  auto n = list->size();
+  auto *arr = new int64_t[n];
+  for (size_t i = 0; i < n; ++i) {
+    auto *elem = dyn_cast<IntInit>(list->getElement(i));
+    if (!elem) {
+      delete[] arr;
+      return false;
+    }
+    arr[i] = elem->getValue();
+  }
+  *out = arr;
+  *out_len = n;
+  return true;
+}
+
+TableGenBool tableGenRecordGetValueAsListOfStrings(TableGenRecordRef record_ref,
+                                                   TableGenStringRef name,
+                                                   TableGenStringRef **out,
+                                                   size_t *out_len) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return false;
+  auto *list = dyn_cast<ListInit>(rv->getValue());
+  if (!list)
+    return false;
+  auto n = list->size();
+  auto *arr = new TableGenStringRef[n];
+  for (size_t i = 0; i < n; ++i) {
+    auto *elem = dyn_cast<StringInit>(list->getElement(i));
+    if (!elem) {
+      delete[] arr;
+      return false;
+    }
+    auto s = elem->getValue();
+    arr[i] = TableGenStringRef{.data = s.data(), .len = s.size()};
+  }
+  *out = arr;
+  *out_len = n;
+  return true;
+}
+
+TableGenBool
+tableGenRecordGetValueAsOptionalString(TableGenRecordRef record_ref,
+                                       TableGenStringRef name,
+                                       TableGenStringRef *out) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return false;
+  if (isa<UnsetInit>(rv->getValue())) {
+    *out = TableGenStringRef{.data = nullptr, .len = 0};
+    return true;
+  }
+  auto *init = dyn_cast<StringInit>(rv->getValue());
+  if (!init)
+    return false;
+  auto s = init->getValue();
+  *out = TableGenStringRef{.data = s.data(), .len = s.size()};
+  return true;
+}
+
+TableGenRecordRef
+tableGenRecordGetValueAsOptionalDef(TableGenRecordRef record_ref,
+                                    TableGenStringRef name) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return nullptr;
+  if (isa<UnsetInit>(rv->getValue()))
+    return nullptr;
+  auto *init = dyn_cast<DefInit>(rv->getValue());
+  if (!init)
+    return nullptr;
+  return wrap(const_cast<Record *>(init->getDef()));
+}
+
+TableGenBool tableGenRecordIsValueUnset(TableGenRecordRef record_ref,
+                                        TableGenStringRef name) {
+  auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
+  if (!rv)
+    return false;
+  return isa<UnsetInit>(rv->getValue());
+}
+
+void tableGenIntArrayFree(int64_t *arr) { delete[] arr; }
+
+void tableGenStringRefArrayFree(TableGenStringRef *arr) { delete[] arr; }
+
+TableGenBool tableGenRecordIsClass(TableGenRecordRef record_ref) {
+  return unwrap(record_ref)->isClass();
+}
+
+TableGenTypedInitRef tableGenRecordGetDefInit(TableGenRecordRef record_ref) {
+  return wrap(dyn_cast<TypedInit>(unwrap(record_ref)->getDefInit()));
+}
+
+unsigned tableGenRecordGetID(TableGenRecordRef record_ref) {
+  return unwrap(record_ref)->getID();
+}
+
+TableGenTypedInitRef tableGenRecordGetNameInit(TableGenRecordRef record_ref) {
+  return wrap(dyn_cast<TypedInit>(unwrap(record_ref)->getNameInit()));
+}
+
+TableGenBool tableGenRecordHasDirectSuperClass(TableGenRecordRef record_ref,
+                                               TableGenRecordRef super_ref) {
+  return unwrap(record_ref)->hasDirectSuperClass(unwrap(super_ref));
+}
+
+size_t tableGenRecordRecTyGetNumClasses(TableGenRecordRef record_ref) {
+  return unwrap(record_ref)->getType()->getClasses().size();
+}
+
+TableGenRecordRef tableGenRecordRecTyGetClass(TableGenRecordRef record_ref,
+                                              size_t index) {
+  auto classes = unwrap(record_ref)->getType()->getClasses();
+  if (index >= classes.size())
+    return nullptr;
+  return wrap(const_cast<Record *>(classes[index]));
+}
+
+TableGenBool tableGenRecordRecTyIsSubClassOf(TableGenRecordRef record_ref,
+                                             TableGenRecordRef class_ref) {
+  return unwrap(record_ref)->getType()->isSubClassOf(unwrap(class_ref));
+}

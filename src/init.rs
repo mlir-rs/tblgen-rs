@@ -15,15 +15,17 @@
 //! [`TryInto`]. Most conversions are cheap, except for conversion to
 //! [`String`].
 
+#[cfg(feature = "llvm22-0")]
+use crate::raw::tableGenBitsInitConvertKnownBitsToInt;
 use crate::{
     raw::{
         TableGenRecTyKind, TableGenTypedInitRef, tableGenBitInitGetValue, tableGenBitInitIsVarBit,
         tableGenBitsInitGetBitInit, tableGenBitsInitGetNumBits, tableGenDagRecordArgName,
-        tableGenDagRecordGet, tableGenDagRecordNumArgs, tableGenDagRecordOperator,
-        tableGenDefInitGetValue, tableGenInitDump, tableGenInitPrint, tableGenInitRecType,
-        tableGenIntInitGetValue, tableGenListInitGetElementType, tableGenListRecordGet,
-        tableGenListRecordNumElements, tableGenStringInitGetValue, tableGenVarBitInitGetBitNum,
-        tableGenVarBitInitGetVarName,
+        tableGenDagRecordGet, tableGenDagRecordGetArgNo, tableGenDagRecordNumArgs,
+        tableGenDagRecordOperator, tableGenDefInitGetValue, tableGenInitDump, tableGenInitPrint,
+        tableGenInitRecType, tableGenIntInitGetValue, tableGenListInitGetElementType,
+        tableGenListRecordGet, tableGenListRecordNumElements, tableGenStringInitGetValue,
+        tableGenVarBitInitGetBitNum, tableGenVarBitInitGetVarName,
     },
     string_ref::StringRef,
     util::print_callback,
@@ -404,6 +406,14 @@ impl<'a> BitsInit<'a> {
         unsafe { tableGenBitsInitGetNumBits(self.raw, &mut len) };
         len
     }
+
+    /// Returns the known bits as a `u64`.
+    ///
+    /// Variable bits (unresolved references) are treated as zero.
+    #[cfg(feature = "llvm22-0")]
+    pub fn known_bits_to_int(self) -> u64 {
+        unsafe { tableGenBitsInitConvertKnownBitsToInt(self.raw) }
+    }
 }
 
 init!(IntInit);
@@ -500,6 +510,16 @@ impl<'a> DagInit<'a> {
     pub fn name(self, index: usize) -> Option<&'a str> {
         unsafe { StringRef::from_option_raw(tableGenDagRecordArgName(self.raw, index)) }
             .and_then(|s| s.try_into().ok())
+    }
+
+    /// Returns the argument index for the given name, or `None` if not found.
+    pub fn arg_no(self, name: &str) -> Option<usize> {
+        let result = unsafe { tableGenDagRecordGetArgNo(self.raw, StringRef::from(name).to_raw()) };
+        if result == usize::MAX {
+            None
+        } else {
+            Some(result)
+        }
     }
 
     /// Returns the argument at the given index.

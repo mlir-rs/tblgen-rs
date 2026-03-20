@@ -168,3 +168,14 @@ TableGenStringRef tableGenDagRecordArgName(TableGenTypedInitRef rv_ref,
 void tableGenStringFree(const char *str) { delete str; }
 
 void tableGenStringArrayFree(const char **str_array) { delete str_array; }
+
+size_t tableGenDagRecordGetArgNo(TableGenTypedInitRef dag_ref,
+                                 TableGenStringRef name) {
+  auto dag = dyn_cast<DagInit>(unwrap(dag_ref));
+  if (!dag)
+    return (size_t)-1;
+  auto result = dag->getArgNo(StringRef(name.data, name.len));
+  if (!result)
+    return (size_t)-1;
+  return *result;
+}

@@ -164,6 +164,7 @@ TableGenBool tableGenBitInitGetValue(TableGenTypedInitRef ti, int8_t *bit);
 TableGenBool tableGenBitsInitGetNumBits(TableGenTypedInitRef ti, size_t *len);
 TableGenTypedInitRef tableGenBitsInitGetBitInit(TableGenTypedInitRef ti,
                                                 size_t index);
+uint64_t tableGenBitsInitConvertKnownBitsToInt(TableGenTypedInitRef ti);
 TableGenBool tableGenIntInitGetValue(TableGenTypedInitRef ti, int64_t *integer);
 TableGenStringRef tableGenStringInitGetValue(TableGenTypedInitRef ti);
 char *tableGenStringInitGetValueNewString(TableGenTypedInitRef ti);
@@ -189,6 +190,78 @@ size_t tableGenVarBitInitGetBitNum(TableGenTypedInitRef ti);
 void tableGenSourceLocationFree(TableGenSourceLocationRef loc_ref);
 void tableGenStringFree(const char *str);
 void tableGenStringArrayFree(const char **str_array);
+
+// Record typed value accessors
+TableGenBool tableGenRecordGetValueAsInt(TableGenRecordRef record_ref,
+                                         TableGenStringRef name, int64_t *out);
+TableGenStringRef tableGenRecordGetValueAsString(TableGenRecordRef record_ref,
+                                                 TableGenStringRef name);
+TableGenBool tableGenRecordGetValueAsBit(TableGenRecordRef record_ref,
+                                         TableGenStringRef name, int8_t *out);
+TableGenRecordRef tableGenRecordGetValueAsDef(TableGenRecordRef record_ref,
+                                              TableGenStringRef name);
+TableGenTypedInitRef tableGenRecordGetValueAsDag(TableGenRecordRef record_ref,
+                                                 TableGenStringRef name);
+TableGenTypedInitRef
+tableGenRecordGetValueAsBitsInit(TableGenRecordRef record_ref,
+                                 TableGenStringRef name);
+TableGenTypedInitRef
+tableGenRecordGetValueAsListInit(TableGenRecordRef record_ref,
+                                 TableGenStringRef name);
+TableGenRecordVectorRef
+tableGenRecordGetValueAsListOfDefs(TableGenRecordRef record_ref,
+                                   TableGenStringRef name);
+TableGenBool tableGenRecordGetValueAsListOfInts(TableGenRecordRef record_ref,
+                                                TableGenStringRef name,
+                                                int64_t **out, size_t *out_len);
+TableGenBool tableGenRecordGetValueAsListOfStrings(TableGenRecordRef record_ref,
+                                                   TableGenStringRef name,
+                                                   TableGenStringRef **out,
+                                                   size_t *out_len);
+TableGenBool
+tableGenRecordGetValueAsOptionalString(TableGenRecordRef record_ref,
+                                       TableGenStringRef name,
+                                       TableGenStringRef *out);
+TableGenRecordRef
+tableGenRecordGetValueAsOptionalDef(TableGenRecordRef record_ref,
+                                    TableGenStringRef name);
+TableGenBool tableGenRecordIsValueUnset(TableGenRecordRef record_ref,
+                                        TableGenStringRef name);
+void tableGenIntArrayFree(int64_t *arr);
+void tableGenStringRefArrayFree(TableGenStringRef *arr);
+
+// Record identity/metadata
+TableGenBool tableGenRecordIsClass(TableGenRecordRef record_ref);
+TableGenTypedInitRef tableGenRecordGetDefInit(TableGenRecordRef record_ref);
+unsigned tableGenRecordGetID(TableGenRecordRef record_ref);
+TableGenTypedInitRef tableGenRecordGetNameInit(TableGenRecordRef record_ref);
+TableGenBool tableGenRecordHasDirectSuperClass(TableGenRecordRef record_ref,
+                                               TableGenRecordRef super_ref);
+
+// RecTy detail accessors
+size_t tableGenRecordValGetBitsWidth(TableGenRecordValRef rv_ref);
+TableGenRecTyKind
+tableGenRecordValGetListElementType(TableGenRecordValRef rv_ref);
+size_t tableGenRecordRecTyGetNumClasses(TableGenRecordRef record_ref);
+TableGenRecordRef tableGenRecordRecTyGetClass(TableGenRecordRef record_ref,
+                                              size_t index);
+TableGenBool tableGenRecordRecTyIsSubClassOf(TableGenRecordRef record_ref,
+                                             TableGenRecordRef class_ref);
+
+// RecordVal accessors
+TableGenBool tableGenRecordValIsTemplateArg(TableGenRecordValRef rv_ref);
+TableGenBool tableGenRecordValIsNonconcreteOK(TableGenRecordValRef rv_ref);
+
+// DagInit accessors
+size_t tableGenDagRecordGetArgNo(TableGenTypedInitRef dag_ref,
+                                 TableGenStringRef name);
+
+// RecordKeeper accessors
+TableGenStringRef
+tableGenRecordKeeperGetInputFilename(TableGenRecordKeeperRef rk_ref);
+TableGenTypedInitRef
+tableGenRecordKeeperGetGlobal(TableGenRecordKeeperRef rk_ref,
+                              TableGenStringRef name);
 
 #ifdef __cplusplus
 }
