@@ -129,8 +129,9 @@ tableGenRecordKeeperGetInputFilename(TableGenRecordKeeperRef rk_ref) {
   return TableGenStringRef{.data = name.data(), .len = name.size()};
 }
 
-TableGenTypedInitRef tableGenRecordKeeperGetGlobal(TableGenRecordKeeperRef rk_ref,
-                                                    TableGenStringRef name) {
+TableGenTypedInitRef
+tableGenRecordKeeperGetGlobal(TableGenRecordKeeperRef rk_ref,
+                              TableGenStringRef name) {
   auto *init = unwrap(rk_ref)->getGlobal(StringRef(name.data, name.len));
   if (!init)
     return nullptr;

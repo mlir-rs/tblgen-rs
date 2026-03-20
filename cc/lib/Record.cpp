@@ -114,8 +114,7 @@ TableGenRecordRef tableGenRecordGetSuperClass(TableGenRecordRef record_ref,
 }
 
 TableGenBool tableGenRecordGetValueAsInt(TableGenRecordRef record_ref,
-                                         TableGenStringRef name,
-                                         int64_t *out) {
+                                         TableGenStringRef name, int64_t *out) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return false;
@@ -127,7 +126,7 @@ TableGenBool tableGenRecordGetValueAsInt(TableGenRecordRef record_ref,
 }
 
 TableGenStringRef tableGenRecordGetValueAsString(TableGenRecordRef record_ref,
-                                                  TableGenStringRef name) {
+                                                 TableGenStringRef name) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return TableGenStringRef{.data = nullptr, .len = 0};
@@ -139,8 +138,7 @@ TableGenStringRef tableGenRecordGetValueAsString(TableGenRecordRef record_ref,
 }
 
 TableGenBool tableGenRecordGetValueAsBit(TableGenRecordRef record_ref,
-                                          TableGenStringRef name,
-                                          int8_t *out) {
+                                         TableGenStringRef name, int8_t *out) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return false;
@@ -152,7 +150,7 @@ TableGenBool tableGenRecordGetValueAsBit(TableGenRecordRef record_ref,
 }
 
 TableGenRecordRef tableGenRecordGetValueAsDef(TableGenRecordRef record_ref,
-                                               TableGenStringRef name) {
+                                              TableGenStringRef name) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return nullptr;
@@ -163,7 +161,7 @@ TableGenRecordRef tableGenRecordGetValueAsDef(TableGenRecordRef record_ref,
 }
 
 TableGenTypedInitRef tableGenRecordGetValueAsDag(TableGenRecordRef record_ref,
-                                                  TableGenStringRef name) {
+                                                 TableGenStringRef name) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return nullptr;
@@ -175,7 +173,7 @@ TableGenTypedInitRef tableGenRecordGetValueAsDag(TableGenRecordRef record_ref,
 
 TableGenTypedInitRef
 tableGenRecordGetValueAsBitsInit(TableGenRecordRef record_ref,
-                                  TableGenStringRef name) {
+                                 TableGenStringRef name) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return nullptr;
@@ -187,7 +185,7 @@ tableGenRecordGetValueAsBitsInit(TableGenRecordRef record_ref,
 
 TableGenTypedInitRef
 tableGenRecordGetValueAsListInit(TableGenRecordRef record_ref,
-                                  TableGenStringRef name) {
+                                 TableGenStringRef name) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return nullptr;
@@ -199,7 +197,7 @@ tableGenRecordGetValueAsListInit(TableGenRecordRef record_ref,
 
 TableGenRecordVectorRef
 tableGenRecordGetValueAsListOfDefs(TableGenRecordRef record_ref,
-                                    TableGenStringRef name) {
+                                   TableGenStringRef name) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return nullptr;
@@ -220,9 +218,9 @@ tableGenRecordGetValueAsListOfDefs(TableGenRecordRef record_ref,
 }
 
 TableGenBool tableGenRecordGetValueAsListOfInts(TableGenRecordRef record_ref,
-                                                 TableGenStringRef name,
-                                                 int64_t **out,
-                                                 size_t *out_len) {
+                                                TableGenStringRef name,
+                                                int64_t **out,
+                                                size_t *out_len) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return false;
@@ -244,9 +242,10 @@ TableGenBool tableGenRecordGetValueAsListOfInts(TableGenRecordRef record_ref,
   return true;
 }
 
-TableGenBool tableGenRecordGetValueAsListOfStrings(
-    TableGenRecordRef record_ref, TableGenStringRef name,
-    TableGenStringRef **out, size_t *out_len) {
+TableGenBool tableGenRecordGetValueAsListOfStrings(TableGenRecordRef record_ref,
+                                                   TableGenStringRef name,
+                                                   TableGenStringRef **out,
+                                                   size_t *out_len) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return false;
@@ -269,9 +268,10 @@ TableGenBool tableGenRecordGetValueAsListOfStrings(
   return true;
 }
 
-TableGenBool tableGenRecordGetValueAsOptionalString(
-    TableGenRecordRef record_ref, TableGenStringRef name,
-    TableGenStringRef *out) {
+TableGenBool
+tableGenRecordGetValueAsOptionalString(TableGenRecordRef record_ref,
+                                       TableGenStringRef name,
+                                       TableGenStringRef *out) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return false;
@@ -289,7 +289,7 @@ TableGenBool tableGenRecordGetValueAsOptionalString(
 
 TableGenRecordRef
 tableGenRecordGetValueAsOptionalDef(TableGenRecordRef record_ref,
-                                     TableGenStringRef name) {
+                                    TableGenStringRef name) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return nullptr;
@@ -302,7 +302,7 @@ tableGenRecordGetValueAsOptionalDef(TableGenRecordRef record_ref,
 }
 
 TableGenBool tableGenRecordIsValueUnset(TableGenRecordRef record_ref,
-                                         TableGenStringRef name) {
+                                        TableGenStringRef name) {
   auto *rv = unwrap(record_ref)->getValue(StringRef(name.data, name.len));
   if (!rv)
     return false;
@@ -330,7 +330,7 @@ TableGenTypedInitRef tableGenRecordGetNameInit(TableGenRecordRef record_ref) {
 }
 
 TableGenBool tableGenRecordHasDirectSuperClass(TableGenRecordRef record_ref,
-                                                TableGenRecordRef super_ref) {
+                                               TableGenRecordRef super_ref) {
   return unwrap(record_ref)->hasDirectSuperClass(unwrap(super_ref));
 }
 
@@ -339,7 +339,7 @@ size_t tableGenRecordRecTyGetNumClasses(TableGenRecordRef record_ref) {
 }
 
 TableGenRecordRef tableGenRecordRecTyGetClass(TableGenRecordRef record_ref,
-                                               size_t index) {
+                                              size_t index) {
   auto classes = unwrap(record_ref)->getType()->getClasses();
   if (index >= classes.size())
     return nullptr;
@@ -347,6 +347,6 @@ TableGenRecordRef tableGenRecordRecTyGetClass(TableGenRecordRef record_ref,
 }
 
 TableGenBool tableGenRecordRecTyIsSubClassOf(TableGenRecordRef record_ref,
-                                              TableGenRecordRef class_ref) {
+                                             TableGenRecordRef class_ref) {
   return unwrap(record_ref)->getType()->isSubClassOf(unwrap(class_ref));
 }
