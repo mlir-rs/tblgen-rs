@@ -28,6 +28,8 @@ use crate::{
     string_ref::StringRef,
     util::print_callback,
 };
+#[cfg(feature = "llvm22-0")]
+use crate::raw::tableGenBitsInitConvertKnownBitsToInt;
 use paste::paste;
 
 use crate::{
@@ -403,6 +405,14 @@ impl<'a> BitsInit<'a> {
         let mut len = 0;
         unsafe { tableGenBitsInitGetNumBits(self.raw, &mut len) };
         len
+    }
+
+    /// Returns the known bits as a `u64`.
+    ///
+    /// Variable bits (unresolved references) are treated as zero.
+    #[cfg(feature = "llvm22-0")]
+    pub fn known_bits_to_int(self) -> u64 {
+        unsafe { tableGenBitsInitConvertKnownBitsToInt(self.raw) }
     }
 }
 

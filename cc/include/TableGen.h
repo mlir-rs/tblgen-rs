@@ -164,6 +164,7 @@ TableGenBool tableGenBitInitGetValue(TableGenTypedInitRef ti, int8_t *bit);
 TableGenBool tableGenBitsInitGetNumBits(TableGenTypedInitRef ti, size_t *len);
 TableGenTypedInitRef tableGenBitsInitGetBitInit(TableGenTypedInitRef ti,
                                                 size_t index);
+uint64_t tableGenBitsInitConvertKnownBitsToInt(TableGenTypedInitRef ti);
 TableGenBool tableGenIntInitGetValue(TableGenTypedInitRef ti, int64_t *integer);
 TableGenStringRef tableGenStringInitGetValue(TableGenTypedInitRef ti);
 char *tableGenStringInitGetValueNewString(TableGenTypedInitRef ti);

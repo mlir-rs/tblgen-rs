@@ -18,8 +18,10 @@ const LLVM_MAJOR_VERSION: usize = if cfg!(feature = "llvm16-0") {
     19
 } else if cfg!(feature = "llvm20-0") {
     20
-} else {
+} else if cfg!(feature = "llvm21-0") {
     21
+} else {
+    22
 };
 
 fn main() {

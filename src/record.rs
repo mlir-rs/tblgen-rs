@@ -623,14 +623,30 @@ mod tests {
         let a = rk.def("A").expect("def A exists");
         if let Err(e) = a.string_value("a") {
             // With source info
+            let msg = format!("{}", e.clone().add_source_info(rk.source_info()));
+            let msg = msg.trim();
+            // LLVM 22+ changed PrintMessage formatting for in-memory buffers.
+            #[cfg(any(
+                feature = "llvm16-0",
+                feature = "llvm17-0",
+                feature = "llvm18-0",
+                feature = "llvm19-0",
+                feature = "llvm20-0",
+                feature = "llvm21-0"
+            ))]
             assert_eq!(
-                format!("{}", e.clone().add_source_info(rk.source_info())).trim(),
+                msg,
                 r#"
                   error: invalid conversion from Int to alloc::string::String
                     int a = test;
                         ^
                 "#
                 .trim()
+            );
+            #[cfg(feature = "llvm22-0")]
+            assert!(
+                msg.contains("error: invalid conversion from Int to alloc::string::String"),
+                "unexpected error message: {msg}"
             );
 
             // Without source info
