@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.9.0] - 2026-03-20
+
+### Added
+
+- LLVM 22 support (#59)
+- `BitsInit::known_bits_to_int()` (LLVM 22 only)
+- Direct typed value accessors on `Record`: `int_value`, `str_value`, `bit_value`, `def_value`, `dag_value`, `bits_init_value`, `list_init_value`, `list_of_defs_value`, `list_of_ints_value`, `list_of_strings_value`, `optional_str_value`, `optional_def_value`, `is_value_unset`
+- Record identity/metadata: `is_class`, `def_init`, `id`, `name_init`, `has_direct_super_class`
+- RecordRecTy accessors: `num_type_classes`, `type_class`, `type_is_subclass_of`
+- RecordValue metadata: `is_template_arg`, `is_nonconcrete_ok`, `bits_width`, `list_element_type`
+- `DagInit::arg_no` for named argument lookup
+- `RecordKeeper::input_filename` and `RecordKeeper::global`
+- LLVM 21 test matrix in CI
+
+### Changed
+
+- Default LLVM version is now 22
+
 ## [0.8.0] - Unreleased
 
 ### Fixed
