@@ -164,6 +164,16 @@ fn build_c_library() -> Result<(), Box<dyn Error>> {
         } else {
             "-Werror"
         })
+        .flag(if cfg!(target_env = "msvc") {
+            "/W4"
+        } else {
+            "-Wall"
+        })
+        .flag(if cfg!(target_env = "msvc") {
+            "" // /W4 already covers extras on MSVC
+        } else {
+            "-Wno-unused-parameter"
+        })
         .std("c++17")
         .compile("CTableGen");
 

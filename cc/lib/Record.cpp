@@ -64,7 +64,8 @@ TableGenBool tableGenRecordIsSubclassOf(TableGenRecordRef record_ref,
 }
 
 TableGenSourceLocationRef tableGenRecordGetLoc(TableGenRecordRef record_ref) {
-  return wrap(new ArrayRef(unwrap(record_ref)->getLoc()));
+  auto locs = unwrap(record_ref)->getLoc();
+  return wrap(new std::vector<SMLoc>(locs.begin(), locs.end()));
 }
 
 void tableGenRecordPrint(TableGenRecordRef record_ref,

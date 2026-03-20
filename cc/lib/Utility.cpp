@@ -182,7 +182,8 @@ TableGenBool tableGenPrintError(TableGenParserRef ref,
                                 TableGenStringCallback callback,
                                 void *userData) {
   ctablegen::CallbackOstream stream(callback, userData);
-  ArrayRef<SMLoc> Loc = *unwrap(loc_ref);
+  auto &LocVec = *unwrap(loc_ref);
+  ArrayRef<SMLoc> Loc(LocVec);
 
   SMLoc NullLoc;
   if (Loc.empty())
@@ -206,13 +207,12 @@ TableGenBool tableGenPrintError(TableGenParserRef ref,
 }
 
 TableGenSourceLocationRef tableGenSourceLocationNull() {
-  auto source_loc = SMLoc();
-  return wrap(new ArrayRef(source_loc));
+  return wrap(new std::vector<SMLoc>());
 }
 
 TableGenSourceLocationRef
 tableGenSourceLocationClone(TableGenSourceLocationRef loc_ref) {
-  return wrap(new ArrayRef(*unwrap(loc_ref)));
+  return wrap(new std::vector<SMLoc>(*unwrap(loc_ref)));
 }
 
 void tableGenSourceLocationFree(TableGenSourceLocationRef loc_ref) {
