@@ -122,3 +122,17 @@ TableGenRecordVectorRef tableGenRecordKeeperGetAllDerivedDefinitionsIfDefined(
       unwrap(rk_ref)->getAllDerivedDefinitionsIfDefined(
           StringRef(className.data, className.len))));
 }
+
+TableGenStringRef
+tableGenRecordKeeperGetInputFilename(TableGenRecordKeeperRef rk_ref) {
+  auto name = unwrap(rk_ref)->getInputFilename();
+  return TableGenStringRef{.data = name.data(), .len = name.size()};
+}
+
+TableGenTypedInitRef tableGenRecordKeeperGetGlobal(TableGenRecordKeeperRef rk_ref,
+                                                    TableGenStringRef name) {
+  auto *init = unwrap(rk_ref)->getGlobal(StringRef(name.data, name.len));
+  if (!init)
+    return nullptr;
+  return wrap(dyn_cast<TypedInit>(init));
+}

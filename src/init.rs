@@ -19,7 +19,8 @@ use crate::{
     raw::{
         TableGenRecTyKind, TableGenTypedInitRef, tableGenBitInitGetValue, tableGenBitInitIsVarBit,
         tableGenBitsInitGetBitInit, tableGenBitsInitGetNumBits, tableGenDagRecordArgName,
-        tableGenDagRecordGet, tableGenDagRecordNumArgs, tableGenDagRecordOperator,
+        tableGenDagRecordGet, tableGenDagRecordGetArgNo, tableGenDagRecordNumArgs,
+        tableGenDagRecordOperator,
         tableGenDefInitGetValue, tableGenInitDump, tableGenInitPrint, tableGenInitRecType,
         tableGenIntInitGetValue, tableGenListInitGetElementType, tableGenListRecordGet,
         tableGenListRecordNumElements, tableGenStringInitGetValue, tableGenVarBitInitGetBitNum,
@@ -510,6 +511,18 @@ impl<'a> DagInit<'a> {
     pub fn name(self, index: usize) -> Option<&'a str> {
         unsafe { StringRef::from_option_raw(tableGenDagRecordArgName(self.raw, index)) }
             .and_then(|s| s.try_into().ok())
+    }
+
+    /// Returns the argument index for the given name, or `None` if not found.
+    pub fn arg_no(self, name: &str) -> Option<usize> {
+        let result = unsafe {
+            tableGenDagRecordGetArgNo(self.raw, StringRef::from(name).to_raw())
+        };
+        if result == usize::MAX {
+            None
+        } else {
+            Some(result)
+        }
     }
 
     /// Returns the argument at the given index.

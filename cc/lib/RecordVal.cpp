@@ -67,3 +67,26 @@ void tableGenRecordValDump(TableGenRecordValRef rv_ref) {
 TableGenSourceLocationRef tableGenRecordValGetLoc(TableGenRecordValRef rv_ref) {
   return wrap(new ArrayRef(unwrap(rv_ref)->getLoc()));
 }
+
+size_t tableGenRecordValGetBitsWidth(TableGenRecordValRef rv_ref) {
+  auto *bits_ty = dyn_cast<BitsRecTy>(unwrap(rv_ref)->getType());
+  if (!bits_ty)
+    return 0;
+  return bits_ty->getNumBits();
+}
+
+TableGenRecTyKind
+tableGenRecordValGetListElementType(TableGenRecordValRef rv_ref) {
+  auto *list_ty = dyn_cast<ListRecTy>(unwrap(rv_ref)->getType());
+  if (!list_ty)
+    return TableGenInvalidRecTyKind;
+  return ctablegen::tableGenFromRecType(list_ty->getElementType());
+}
+
+TableGenBool tableGenRecordValIsTemplateArg(TableGenRecordValRef rv_ref) {
+  return unwrap(rv_ref)->isTemplateArg();
+}
+
+TableGenBool tableGenRecordValIsNonconcreteOK(TableGenRecordValRef rv_ref) {
+  return unwrap(rv_ref)->isNonconcreteOK();
+}

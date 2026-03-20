@@ -31,8 +31,10 @@ use crate::{
         tableGenRecordKeeperGetNextDef, tableGenRecordKeeperItemGetName,
         tableGenRecordKeeperItemGetRecord, tableGenRecordKeeperIteratorClone,
         tableGenRecordKeeperIteratorFree, tableGenRecordVectorFree, tableGenRecordVectorGet,
-        tableGenRecordVectorSize,
+        tableGenRecordVectorSize, tableGenRecordKeeperGetInputFilename,
+        tableGenRecordKeeperGetGlobal,
     },
+    init::TypedInit,
     record::Record,
     string_ref::StringRef,
 };
@@ -114,6 +116,26 @@ impl<'s> RecordKeeper<'s> {
 
     pub fn source_info(&self) -> SourceInfo<'_> {
         SourceInfo(&self.parser)
+    }
+
+    /// Returns the input filename.
+    pub fn input_filename(&self) -> Result<&str, Error> {
+        let raw = unsafe { tableGenRecordKeeperGetInputFilename(self.raw) };
+        unsafe { StringRef::from_raw(raw) }
+            .try_into()
+            .map_err(|e: std::str::Utf8Error| TableGenError::from(e).into())
+    }
+
+    /// Returns the global variable with the given name, if it exists.
+    pub fn global(&self, name: &str) -> Option<TypedInit<'_>> {
+        let ptr = unsafe {
+            tableGenRecordKeeperGetGlobal(self.raw, StringRef::from(name).to_raw())
+        };
+        if ptr.is_null() {
+            None
+        } else {
+            Some(unsafe { TypedInit::from_raw(ptr) })
+        }
     }
 }
 

@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("name       = {:?}", name);
 
     // list<int>
-    let list = rec.list_value("values")?;
+    let list = rec.list_init_value("values")?;
     print!("values     = [");
     for (i, elem) in list.iter().enumerate() {
         let n: i64 = elem.try_into()?;
