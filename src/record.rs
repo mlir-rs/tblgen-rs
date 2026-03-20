@@ -12,27 +12,24 @@ use paste::paste;
 use std::{ffi::c_void, marker::PhantomData};
 
 use crate::raw::{
-    TableGenRecordRef, TableGenRecordValRef, tableGenRecordDump, tableGenRecordGetFieldType,
-    tableGenRecordGetFirstValue, tableGenRecordGetLoc, tableGenRecordGetName,
+    TableGenRecTyKind::TableGenInvalidRecTyKind as RawInvalidRecTyKind, TableGenRecordRef,
+    TableGenRecordValRef, tableGenIntArrayFree, tableGenRecordDump, tableGenRecordGetDefInit,
+    tableGenRecordGetFieldType, tableGenRecordGetFirstValue, tableGenRecordGetID,
+    tableGenRecordGetLoc, tableGenRecordGetName, tableGenRecordGetNameInit,
     tableGenRecordGetNumSuperClasses, tableGenRecordGetNumTemplateArgs,
     tableGenRecordGetSuperClass, tableGenRecordGetTemplateArgName, tableGenRecordGetValue,
-    tableGenRecordIsAnonymous, tableGenRecordIsSubclassOf, tableGenRecordPrint,
-    tableGenRecordValDump, tableGenRecordValGetLoc, tableGenRecordValGetNameInit,
-    tableGenRecordValGetValue, tableGenRecordValNext, tableGenRecordValPrint,
-    tableGenRecordGetValueAsInt, tableGenRecordGetValueAsString, tableGenRecordGetValueAsBit,
-    tableGenRecordGetValueAsDef, tableGenRecordGetValueAsDag, tableGenRecordGetValueAsBitsInit,
-    tableGenRecordGetValueAsListInit, tableGenRecordGetValueAsListOfDefs,
-    tableGenRecordGetValueAsListOfInts, tableGenIntArrayFree,
-    tableGenRecordGetValueAsListOfStrings, tableGenStringRefArrayFree,
-    tableGenRecordGetValueAsOptionalString, tableGenRecordGetValueAsOptionalDef,
-    tableGenRecordIsValueUnset,
-    tableGenRecordIsClass, tableGenRecordGetDefInit, tableGenRecordGetID,
-    tableGenRecordGetNameInit, tableGenRecordHasDirectSuperClass,
-    tableGenRecordRecTyGetNumClasses, tableGenRecordRecTyGetClass,
-    tableGenRecordRecTyIsSubClassOf,
-    tableGenRecordValIsTemplateArg, tableGenRecordValIsNonconcreteOK,
-    tableGenRecordValGetBitsWidth, tableGenRecordValGetListElementType,
-    TableGenRecTyKind::TableGenInvalidRecTyKind as RawInvalidRecTyKind,
+    tableGenRecordGetValueAsBit, tableGenRecordGetValueAsBitsInit, tableGenRecordGetValueAsDag,
+    tableGenRecordGetValueAsDef, tableGenRecordGetValueAsInt, tableGenRecordGetValueAsListInit,
+    tableGenRecordGetValueAsListOfDefs, tableGenRecordGetValueAsListOfInts,
+    tableGenRecordGetValueAsListOfStrings, tableGenRecordGetValueAsOptionalDef,
+    tableGenRecordGetValueAsOptionalString, tableGenRecordGetValueAsString,
+    tableGenRecordHasDirectSuperClass, tableGenRecordIsAnonymous, tableGenRecordIsClass,
+    tableGenRecordIsSubclassOf, tableGenRecordIsValueUnset, tableGenRecordPrint,
+    tableGenRecordRecTyGetClass, tableGenRecordRecTyGetNumClasses, tableGenRecordRecTyIsSubClassOf,
+    tableGenRecordValDump, tableGenRecordValGetBitsWidth, tableGenRecordValGetListElementType,
+    tableGenRecordValGetLoc, tableGenRecordValGetNameInit, tableGenRecordValGetValue,
+    tableGenRecordValIsNonconcreteOK, tableGenRecordValIsTemplateArg, tableGenRecordValNext,
+    tableGenRecordValPrint, tableGenStringRefArrayFree,
 };
 
 use crate::{
@@ -261,9 +258,8 @@ impl<'a> Record<'a> {
 
     /// Returns the string value of the field with the given name as a `&str`.
     pub fn str_value(self, name: &str) -> Result<&'a str, Error> {
-        let raw = unsafe {
-            tableGenRecordGetValueAsString(self.raw, StringRef::from(name).to_raw())
-        };
+        let raw =
+            unsafe { tableGenRecordGetValueAsString(self.raw, StringRef::from(name).to_raw()) };
         if raw.data.is_null() {
             Err(TableGenError::MissingValue(name.into()).with_location(self))
         } else {
@@ -289,9 +285,7 @@ impl<'a> Record<'a> {
 
     /// Returns the def value of the field with the given name as a [`Record`].
     pub fn def_value(self, name: &str) -> Result<Record<'a>, Error> {
-        let ptr = unsafe {
-            tableGenRecordGetValueAsDef(self.raw, StringRef::from(name).to_raw())
-        };
+        let ptr = unsafe { tableGenRecordGetValueAsDef(self.raw, StringRef::from(name).to_raw()) };
         if ptr.is_null() {
             Err(TableGenError::MissingValue(name.into()).with_location(self))
         } else {
@@ -301,9 +295,7 @@ impl<'a> Record<'a> {
 
     /// Returns the dag value of the field with the given name.
     pub fn dag_value(self, name: &str) -> Result<DagInit<'a>, Error> {
-        let ptr = unsafe {
-            tableGenRecordGetValueAsDag(self.raw, StringRef::from(name).to_raw())
-        };
+        let ptr = unsafe { tableGenRecordGetValueAsDag(self.raw, StringRef::from(name).to_raw()) };
         if ptr.is_null() {
             Err(TableGenError::MissingValue(name.into()).with_location(self))
         } else {
@@ -313,9 +305,8 @@ impl<'a> Record<'a> {
 
     /// Returns the bits init of the field with the given name.
     pub fn bits_init_value(self, name: &str) -> Result<BitsInit<'a>, Error> {
-        let ptr = unsafe {
-            tableGenRecordGetValueAsBitsInit(self.raw, StringRef::from(name).to_raw())
-        };
+        let ptr =
+            unsafe { tableGenRecordGetValueAsBitsInit(self.raw, StringRef::from(name).to_raw()) };
         if ptr.is_null() {
             Err(TableGenError::MissingValue(name.into()).with_location(self))
         } else {
@@ -325,9 +316,8 @@ impl<'a> Record<'a> {
 
     /// Returns the list init of the field with the given name.
     pub fn list_init_value(self, name: &str) -> Result<ListInit<'a>, Error> {
-        let ptr = unsafe {
-            tableGenRecordGetValueAsListInit(self.raw, StringRef::from(name).to_raw())
-        };
+        let ptr =
+            unsafe { tableGenRecordGetValueAsListInit(self.raw, StringRef::from(name).to_raw()) };
         if ptr.is_null() {
             Err(TableGenError::MissingValue(name.into()).with_location(self))
         } else {
@@ -337,9 +327,8 @@ impl<'a> Record<'a> {
 
     /// Returns the list-of-defs value of the field with the given name.
     pub fn list_of_defs_value(self, name: &str) -> Result<Vec<Record<'a>>, Error> {
-        let ptr = unsafe {
-            tableGenRecordGetValueAsListOfDefs(self.raw, StringRef::from(name).to_raw())
-        };
+        let ptr =
+            unsafe { tableGenRecordGetValueAsListOfDefs(self.raw, StringRef::from(name).to_raw()) };
         if ptr.is_null() {
             return Err(TableGenError::MissingValue(name.into()).with_location(self));
         }
@@ -444,9 +433,7 @@ impl<'a> Record<'a> {
 
     /// Returns true if the named field exists and has an unset value (`?`).
     pub fn is_value_unset(self, name: &str) -> bool {
-        unsafe {
-            tableGenRecordIsValueUnset(self.raw, StringRef::from(name).to_raw()) > 0
-        }
+        unsafe { tableGenRecordIsValueUnset(self.raw, StringRef::from(name).to_raw()) > 0 }
     }
 
     /// Returns true if this record is a class definition (not a def).
@@ -603,7 +590,11 @@ impl RecordValue<'_> {
     /// If this field is list-typed, returns the element type kind.
     pub fn list_element_type(self) -> Option<crate::raw::TableGenRecTyKind::Type> {
         let k = unsafe { tableGenRecordValGetListElementType(self.raw) };
-        if k == RawInvalidRecTyKind { None } else { Some(k) }
+        if k == RawInvalidRecTyKind {
+            None
+        } else {
+            Some(k)
+        }
     }
 }
 

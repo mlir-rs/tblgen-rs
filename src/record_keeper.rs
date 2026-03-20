@@ -22,19 +22,19 @@ use crate::error::TableGenError;
 use crate::error::{SourceLocation, TableGenError, WithLocation};
 use crate::{
     Error, SourceInfo, TableGenParser,
+    init::TypedInit,
     raw::{
         TableGenRecordKeeperIteratorRef, TableGenRecordKeeperRef, TableGenRecordVectorRef,
         tableGenRecordKeeperFree, tableGenRecordKeeperGetAllDerivedDefinitions,
         tableGenRecordKeeperGetAllDerivedDefinitionsIfDefined, tableGenRecordKeeperGetClass,
         tableGenRecordKeeperGetDef, tableGenRecordKeeperGetFirstClass,
-        tableGenRecordKeeperGetFirstDef, tableGenRecordKeeperGetNextClass,
+        tableGenRecordKeeperGetFirstDef, tableGenRecordKeeperGetGlobal,
+        tableGenRecordKeeperGetInputFilename, tableGenRecordKeeperGetNextClass,
         tableGenRecordKeeperGetNextDef, tableGenRecordKeeperItemGetName,
         tableGenRecordKeeperItemGetRecord, tableGenRecordKeeperIteratorClone,
         tableGenRecordKeeperIteratorFree, tableGenRecordVectorFree, tableGenRecordVectorGet,
-        tableGenRecordVectorSize, tableGenRecordKeeperGetInputFilename,
-        tableGenRecordKeeperGetGlobal,
+        tableGenRecordVectorSize,
     },
-    init::TypedInit,
     record::Record,
     string_ref::StringRef,
 };
@@ -128,9 +128,8 @@ impl<'s> RecordKeeper<'s> {
 
     /// Returns the global variable with the given name, if it exists.
     pub fn global(&self, name: &str) -> Option<TypedInit<'_>> {
-        let ptr = unsafe {
-            tableGenRecordKeeperGetGlobal(self.raw, StringRef::from(name).to_raw())
-        };
+        let ptr =
+            unsafe { tableGenRecordKeeperGetGlobal(self.raw, StringRef::from(name).to_raw()) };
         if ptr.is_null() {
             None
         } else {

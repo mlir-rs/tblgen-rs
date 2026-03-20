@@ -15,22 +15,21 @@
 //! [`TryInto`]. Most conversions are cheap, except for conversion to
 //! [`String`].
 
+#[cfg(feature = "llvm22-0")]
+use crate::raw::tableGenBitsInitConvertKnownBitsToInt;
 use crate::{
     raw::{
         TableGenRecTyKind, TableGenTypedInitRef, tableGenBitInitGetValue, tableGenBitInitIsVarBit,
         tableGenBitsInitGetBitInit, tableGenBitsInitGetNumBits, tableGenDagRecordArgName,
         tableGenDagRecordGet, tableGenDagRecordGetArgNo, tableGenDagRecordNumArgs,
-        tableGenDagRecordOperator,
-        tableGenDefInitGetValue, tableGenInitDump, tableGenInitPrint, tableGenInitRecType,
-        tableGenIntInitGetValue, tableGenListInitGetElementType, tableGenListRecordGet,
-        tableGenListRecordNumElements, tableGenStringInitGetValue, tableGenVarBitInitGetBitNum,
-        tableGenVarBitInitGetVarName,
+        tableGenDagRecordOperator, tableGenDefInitGetValue, tableGenInitDump, tableGenInitPrint,
+        tableGenInitRecType, tableGenIntInitGetValue, tableGenListInitGetElementType,
+        tableGenListRecordGet, tableGenListRecordNumElements, tableGenStringInitGetValue,
+        tableGenVarBitInitGetBitNum, tableGenVarBitInitGetVarName,
     },
     string_ref::StringRef,
     util::print_callback,
 };
-#[cfg(feature = "llvm22-0")]
-use crate::raw::tableGenBitsInitConvertKnownBitsToInt;
 use paste::paste;
 
 use crate::{
@@ -515,9 +514,7 @@ impl<'a> DagInit<'a> {
 
     /// Returns the argument index for the given name, or `None` if not found.
     pub fn arg_no(self, name: &str) -> Option<usize> {
-        let result = unsafe {
-            tableGenDagRecordGetArgNo(self.raw, StringRef::from(name).to_raw())
-        };
+        let result = unsafe { tableGenDagRecordGetArgNo(self.raw, StringRef::from(name).to_raw()) };
         if result == usize::MAX {
             None
         } else {
