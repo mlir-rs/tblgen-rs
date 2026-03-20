@@ -22,20 +22,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("=== Classes ===");
     for (name, class) in keeper.classes() {
-        println!("  {}", name?);
+        let name = name?;
+        println!("  {} (is_class={})", name, class.is_class());
         for field in class.values() {
             println!("    field: {}", field.name.to_str()?);
         }
     }
 
     println!("\n=== Defs ===");
-    for (name, _def) in keeper.defs() {
-        println!("  {}", name?);
+    for (name, def) in keeper.defs() {
+        let name = name?;
+        let is_pet = def.subclass_of("Pet");
+        println!("  {} (id={}, is_pet={})", name, def.id(), is_pet);
+
+        // Use has_direct_super_class to check immediate parent
+        let animal = keeper.class("Animal")?;
+        let pet = keeper.class("Pet")?;
+        println!(
+            "    direct super: Animal={}, Pet={}",
+            def.has_direct_super_class(animal),
+            def.has_direct_super_class(pet),
+        );
     }
 
     println!("\n=== Pets (derived from Pet) ===");
     for def in keeper.all_derived_definitions("Pet") {
-        let name = def.string_value("Name")?;
+        let name = def.str_value("Name")?;
         let legs = def.int_value("Legs")?;
         println!("  {} has {} legs", name, legs);
     }
