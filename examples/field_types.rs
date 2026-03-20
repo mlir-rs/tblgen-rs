@@ -111,8 +111,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Superclass checks
     let base = keeper.class("Base")?;
-    println!("has_direct_super_class(Base) = {}", rec.has_direct_super_class(base));
-    println!("type_is_subclass_of(Base)    = {}", rec.type_is_subclass_of(base));
+    println!(
+        "has_direct_super_class(Base) = {}",
+        rec.has_direct_super_class(base)
+    );
+    println!(
+        "type_is_subclass_of(Base)    = {}",
+        rec.type_is_subclass_of(base)
+    );
     println!("num_type_classes             = {}", rec.num_type_classes());
 
     // RecordValue metadata
