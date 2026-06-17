@@ -71,6 +71,8 @@ fn run() -> Result<(), Box<dyn Error>> {
     {
         let link_type = if name.ends_with(".a") {
             "static="
+        } else if name.ends_with(".lib") {
+            "" // rustc accepts MSVC static/import libs by bare name
         } else {
             "dylib="
         };
@@ -101,7 +103,8 @@ fn run() -> Result<(), Box<dyn Error>> {
                 parse_library_name(path.file_name().unwrap().to_str().unwrap())?
             );
         } else {
-            println!("cargo:rustc-link-lib={}", flag);
+            let name = flag.strip_suffix(".lib").unwrap_or(flag);
+            println!("cargo:rustc-link-lib={name}");
         }
     }
 
@@ -129,6 +132,15 @@ fn filter_fortify_source(flags: &str) -> String {
         .join(" ")
 }
 
+fn filter_std_flag(flags: &str) -> String {
+    // Remove -std:c++XX or -std=c++XX from `llvm-config --cxxflags` so std("c++20") survives
+    flags
+        .split_whitespace()
+        .filter(|flag| !flag.starts_with("-std:") && !flag.starts_with("-std="))
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 fn build_c_library() -> Result<(), Box<dyn Error>> {
     let raw_cxxflags = llvm_config(false, "--cxxflags")?;
     let raw_cflags = llvm_config(false, "--cflags")?;
@@ -139,11 +151,11 @@ fn build_c_library() -> Result<(), Box<dyn Error>> {
     // optimization; otherwise keep it for the runtime hardening it provides.
     let (cxxflags, cflags) = if env::var("OPT_LEVEL").as_deref() == Ok("0") {
         (
-            filter_fortify_source(&raw_cxxflags),
+            filter_std_flag(&filter_fortify_source(&raw_cxxflags)),
             filter_fortify_source(&raw_cflags),
         )
     } else {
-        (raw_cxxflags, raw_cflags)
+        (filter_std_flag(&raw_cxxflags), raw_cflags)
     };
     unsafe { env::set_var("CXXFLAGS", cxxflags) };
     unsafe { env::set_var("CFLAGS", cflags) };
@@ -160,7 +172,7 @@ fn build_c_library() -> Result<(), Box<dyn Error>> {
         .include("cc/include")
         .include(llvm_config(false, "--includedir")?)
         .flag(if cfg!(target_env = "msvc") {
-            "/WX"
+            "/WX-" // LLVM 22.1.7 headers trigger C4245/C4244 on MSVC; don't treat as errors
         } else {
             "-Werror"
         })
@@ -174,7 +186,7 @@ fn build_c_library() -> Result<(), Box<dyn Error>> {
         } else {
             "-Wno-unused-parameter"
         })
-        .std("c++17")
+        .std("c++20")
         .compile("CTableGen");
 
     Ok(())
@@ -228,7 +240,14 @@ fn llvm_config(link_static: bool, argument: &str) -> Result<String, Box<dyn Erro
 }
 
 fn parse_library_name(name: &str) -> Result<&str, String> {
-    name.strip_prefix("lib")
-        .and_then(|name| name.split('.').next())
-        .ok_or_else(|| format!("failed to parse library name: {name}"))
+    if let Some(stem) = name.strip_prefix("lib") {
+        return stem
+            .split('.')
+            .next()
+            .ok_or_else(|| format!("failed to parse library name: {name}"));
+    }
+    if let Some(stem) = name.strip_suffix(".lib") {
+        return Ok(stem);
+    }
+    Err(format!("failed to parse library name: {name}"))
 }
