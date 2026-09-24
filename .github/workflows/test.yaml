@@ -25,6 +25,8 @@ jobs:
           - ubuntu-latest
           - macos-latest
         llvm:
+          - version: "23"
+            feature: llvm23-0
           - version: "22"
             feature: llvm22-0
           - version: "21"

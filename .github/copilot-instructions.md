@@ -46,7 +46,7 @@ The safe wrappers (`Record`, `RecordValue`, `TypedInit`) hold raw pointers into 
 - Do not expose C++ STL types directly; convert to C-compatible types at the boundary.
 
 ### LLVM version compatibility
-The crate supports LLVM 16–22 via feature flags (`llvm16-0` … `llvm22-0`, with 22 as default). `build.rs` uses `TABLEGEN_<VERSION>_PREFIX` to locate the correct installation.
+The crate supports LLVM 16–23 via feature flags (`llvm16-0` … `llvm23-0`, with 23 as default). `build.rs` uses `TABLEGEN_<VERSION>_PREFIX` to locate the correct installation.
 
 **Review checklist for LLVM-version-sensitive changes:**
 - New `cc/` code that uses LLVM APIs added after a certain version must be gated with `#if LLVM_VERSION_MAJOR >= X`.
