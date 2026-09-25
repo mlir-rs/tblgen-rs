@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.10.0] - 2026-09-25
+
+### Added
+
+- LLVM 23 support (#84)
+
+### Changed
+
+- Default LLVM version is now 23 (#84)
+- `bindgen` build dependency updated to 0.73.2 (#81)
+
+### Fixed
+
+- Build on Windows with MSVC: LLVM 22.1.7 header warnings are no longer errors, and LLVM libraries link by bare name (#73)
+- Linking against a Release LLVM without assertions: the `dump` wrappers stream to `errs()` instead of calling LLVM's `dump()`, which is compiled out under `NDEBUG` (#78, #87)
+- Spurious MSVC warning from an empty compiler flag in `build.rs` (#82)
+
+## [0.9.1] - 2026-03-20
+
+### Fixed
+
+- Dangling pointer in `SourceLocation` wrappers (#61)
+
 ## [0.9.0] - 2026-03-20
 
 ### Added
