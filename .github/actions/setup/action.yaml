@@ -4,7 +4,7 @@ inputs:
   llvm-version:
     description: LLVM major version to install
     required: false
-    default: "22"
+    default: "23"
 outputs: {}
 runs:
   using: composite
