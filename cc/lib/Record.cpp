@@ -75,6 +75,8 @@ void tableGenRecordPrint(TableGenRecordRef record_ref,
 }
 
 void tableGenRecordDump(TableGenRecordRef record_ref) {
+  // LLVM installation might not enable the `LLVM_ENABLE_DUMP` flag for the
+  // `dump` method.
   errs() << *unwrap(record_ref);
 }
 
