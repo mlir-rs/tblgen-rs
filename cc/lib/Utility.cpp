@@ -143,7 +143,7 @@ void tableGenInitPrint(TableGenTypedInitRef ti, TableGenStringCallback callback,
   stream << *unwrap(ti);
 }
 
-void tableGenInitDump(TableGenTypedInitRef ti) { unwrap(ti)->dump(); }
+void tableGenInitDump(TableGenTypedInitRef ti) { errs() << *unwrap(ti); }
 
 // VarBitInit support: exposes LLVM's VarBitInit for variable bit references
 // (e.g., lda{17}) that BitsInit::getBit() may return instead of BitInit.

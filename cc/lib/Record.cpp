@@ -75,7 +75,7 @@ void tableGenRecordPrint(TableGenRecordRef record_ref,
 }
 
 void tableGenRecordDump(TableGenRecordRef record_ref) {
-  unwrap(record_ref)->dump();
+  errs() << *unwrap(record_ref);
 }
 
 size_t tableGenRecordGetNumTemplateArgs(TableGenRecordRef record_ref) {
