@@ -137,8 +137,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         };
         let extra = if let Some(w) = field.bits_width() {
             format!("<{}>", w)
-        } else if let Some(_) = field.list_element_type() {
-            format!("<...>")
+        } else if field.list_element_type().is_some() {
+            "<...>".to_string()
         } else {
             String::new()
         };
