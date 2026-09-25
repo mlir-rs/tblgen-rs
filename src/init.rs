@@ -77,14 +77,14 @@ impl TypedInit<'_> {
 impl Display for TypedInit<'_> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            Self::Bit(init) => write!(f, "{}", &init),
-            Self::Bits(init) => write!(f, "{}", &init),
-            Self::Code(init) => write!(f, "{}", &init),
-            Self::Int(init) => write!(f, "{}", &init),
-            Self::String(init) => write!(f, "{}", &init),
-            Self::List(init) => write!(f, "{}", &init),
-            Self::Dag(init) => write!(f, "{}", &init),
-            Self::Def(init) => write!(f, "{}", &init),
+            Self::Bit(init) => write!(f, "{}", init),
+            Self::Bits(init) => write!(f, "{}", init),
+            Self::Code(init) => write!(f, "{}", init),
+            Self::Int(init) => write!(f, "{}", init),
+            Self::String(init) => write!(f, "{}", init),
+            Self::List(init) => write!(f, "{}", init),
+            Self::Dag(init) => write!(f, "{}", init),
+            Self::Def(init) => write!(f, "{}", init),
             Self::Invalid => write!(f, "Invalid"),
         }
     }
@@ -96,14 +96,14 @@ impl Debug for TypedInit<'_> {
         let name = self.variant_name();
         write!(f, "{name}(")?;
         match self {
-            Self::Bit(init) => write!(f, "{:#?}", &init),
-            Self::Bits(init) => write!(f, "{:#?}", &init),
-            Self::Code(init) => write!(f, "{:#?}", &init),
-            Self::Int(init) => write!(f, "{:#?}", &init),
-            Self::String(init) => write!(f, "{:#?}", &init),
-            Self::List(init) => write!(f, "{:#?}", &init),
-            Self::Dag(init) => write!(f, "{:#?}", &init),
-            Self::Def(init) => write!(f, "{:#?}", &init),
+            Self::Bit(init) => write!(f, "{:#?}", init),
+            Self::Bits(init) => write!(f, "{:#?}", init),
+            Self::Code(init) => write!(f, "{:#?}", init),
+            Self::Int(init) => write!(f, "{:#?}", init),
+            Self::String(init) => write!(f, "{:#?}", init),
+            Self::List(init) => write!(f, "{:#?}", init),
+            Self::Dag(init) => write!(f, "{:#?}", init),
+            Self::Def(init) => write!(f, "{:#?}", init),
             Self::Invalid => write!(f, ""),
         }?;
         write!(f, "))")
