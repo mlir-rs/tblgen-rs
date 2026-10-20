@@ -16,7 +16,8 @@ use std::{fmt, marker::PhantomData};
     feature = "llvm20-0",
     feature = "llvm21-0",
     feature = "llvm22-0",
-    feature = "llvm23-0"
+    feature = "llvm23-0",
+    feature = "llvm24-0"
 ))]
 use crate::error::TableGenError;
 #[cfg(any(feature = "llvm16-0", feature = "llvm17-0"))]

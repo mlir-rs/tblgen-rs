@@ -882,7 +882,7 @@ mod tests {
                 "#
                 .trim()
             );
-            #[cfg(any(feature = "llvm22-0", feature = "llvm23-0"))]
+            #[cfg(any(feature = "llvm22-0", feature = "llvm23-0", feature = "llvm24-0"))]
             assert!(
                 msg.contains("error: invalid conversion from Int to alloc::string::String"),
                 "unexpected error message: {msg}"

@@ -20,7 +20,7 @@ bindgen = "0.73.2"
 cc = "1.2.17"
 
 [features]
-default = ["llvm23-0"]
+default = ["llvm24-0"]
 llvm16-0 = []
 llvm17-0 = []
 llvm18-0 = []
@@ -29,4 +29,5 @@ llvm20-0 = []
 llvm21-0 = []
 llvm22-0 = []
 llvm23-0 = []
+llvm24-0 = []
 force-static = []

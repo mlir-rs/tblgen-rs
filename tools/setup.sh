@@ -2,7 +2,7 @@
 
 set -e
 
-llvm_version=${LLVM_VERSION:-23}
+llvm_version=${LLVM_VERSION:-24}
 
 brew update
 brew install llvm@$llvm_version zstd
